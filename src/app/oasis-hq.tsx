@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowUpRight, Bot, Building2, CarFront, ChartNoAxesCombined, CheckCircle2, ChevronRight, CircleHelp, Coffee, Crown, DoorOpen, LayoutDashboard, MessageSquare, Palmtree, Plus, ShieldCheck, Sparkles, Users, Waves, BriefcaseBusiness, ClipboardList, LoaderCircle, RefreshCw } from 'lucide-react'
 
-type Agent = {id:string;slug:string;name:string;job_title:string;department:string;specialty:string|null;instructions:string|null;status:string;active:boolean}
+type Agent = {id:string;slug:string;name:string;job_title:string;department:string;specialty:string|null;instructions:string|null;status:string;active:boolean;business_id:string|null}
 type Business = {id:string;name:string;business_type:string|null;description:string|null;active:boolean}
 type Location = {id:string;business_id:string;name:string;address:string|null;city:string|null;province:string|null}
 type Task = {id:string;title:string;description:string|null;status:string;priority:string;created_at:string;assigned_agent_id:string|null;business_id:string|null}
@@ -65,7 +65,7 @@ export default function OasisHQ(){
    const [{data:org,error:orgError},{data:businessRows,error:businessError},{data:agentRows,error:agentError},{data:taskRows,error:taskError}]=await Promise.all([
     supabase.from('organizations').select('id,name').eq('id',membership.organization_id).single(),
     supabase.from('businesses').select('id,name,business_type,description,active').eq('organization_id',membership.organization_id).eq('active',true).order('name'),
-    supabase.from('oasis_agents').select('id,slug,name,job_title,department,specialty,instructions,status,active').eq('organization_id',membership.organization_id).eq('active',true).order('created_at'),
+    supabase.from('oasis_agents').select('id,slug,name,job_title,department,specialty,instructions,status,active,business_id').eq('organization_id',membership.organization_id).eq('active',true).order('created_at'),
     supabase.from('oasis_tasks').select('id,title,description,status,priority,created_at,assigned_agent_id,business_id').eq('organization_id',membership.organization_id).order('created_at',{ascending:false}).limit(60)
    ])
    if(orgError)throw orgError;if(businessError)throw businessError;if(agentError)throw agentError;if(taskError)throw taskError
