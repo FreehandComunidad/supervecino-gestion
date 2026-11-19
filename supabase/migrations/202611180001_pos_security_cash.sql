@@ -43,7 +43,7 @@ begin
     from (
       select (value->>'product_id')::uuid as product_id, (value->>'quantity')::numeric as quantity
       from jsonb_array_elements(p_items)
-    ) items group by product_id
+    ) items group by product_id order by product_id
   loop
     v_qty := (v_item->>'quantity')::numeric;
     if v_qty <= 0 then raise exception 'Cantidad inválida'; end if;
@@ -71,7 +71,7 @@ begin
   for v_item in
     select jsonb_build_object('product_id',product_id,'quantity',sum(quantity))
     from (select (value->>'product_id')::uuid product_id,(value->>'quantity')::numeric quantity from jsonb_array_elements(p_items)) items
-    group by product_id
+    group by product_id order by product_id
   loop
     select * into v_product from public.products where id=(v_item->>'product_id')::uuid for update;
     v_qty := (v_item->>'quantity')::numeric;
