@@ -14,3 +14,4 @@ test('total rounds to cents', () => {
   assert.equal(calculateTotal(100.1, 0.05), 100.05)
   assert.equal(calculateTotal(100, 101), 0)
 })
+\ntest('weighted quantities round each line to cents', () => {\n  assert.equal(calculateSubtotal([{ sale_price: 1000.99, quantity: 0.1 }]), 100.1)\n})\n
