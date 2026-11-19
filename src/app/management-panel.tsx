@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { RefreshCw, Search, TrendingUp, Package, Receipt, Wallet, History, Save } from 'lucide-react'
+import { RefreshCw, Search, TrendingUp, Package, Receipt, Wallet, History, Save, FileUp, Download } from 'lucide-react'
+import * as XLSX from 'xlsx'
 
 type Mode = 'sales' | 'cash' | 'pricing' | 'stats'
-type Product = { id:string; name:string; barcode:string|null; sale_price:number; cost_price:number; stock:number; unit:string; manages_stock:boolean }
+type Product = { id:string; name:string; barcode:string|null; sale_price:number; cost_price:number; vat_rate:number; stock:number; unit:string; manages_stock:boolean }
 type Sale = { id:string; sale_number:number; sold_at:string; status:string; subtotal:number; discount:number; total:number; cashier_id:string|null }
 type Cash = { id:string; opened_by:string; opened_at:string; opening_amount:number; closed_by:string|null; closed_at:string|null; closing_amount:number|null; expected_amount:number|null; notes:string|null }
 const money=(v:number)=>new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:2}).format(Number(v||0))
@@ -18,7 +19,9 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
  const [sales,setSales]=useState<Sale[]>([])
  const [cash,setCash]=useState<Cash[]>([])
  const [profiles,setProfiles]=useState<Record<string,string>>({})
- const [priceEdits,setPriceEdits]=useState<Record<string,{cost:string;sale:string}>>({})
+ const [priceEdits,setPriceEdits]=useState<Record<string,{cost:string;sale:string;vat:string}>>({})
+ const [importing,setImporting]=useState(false)
+ const [importMessage,setImportMessage]=useState('')
  const [items,setItems]=useState<Record<string,any[]>>({})
  const [payments,setPayments]=useState<Record<string,any[]>>({})
  const [expanded,setExpanded]=useState<string|null>(null)
@@ -29,7 +32,7 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
  const load=useCallback(async()=>{
   setLoading(true);setError('')
   if(mode==='pricing'||mode==='stats'){
-   const {data,error}=await db.from('products').select('id,name,barcode,sale_price,cost_price,stock,unit,manages_stock').eq('active',true).order('name').limit(1000)
+   const {data,error}=await db.from('products').select('id,name,barcode,sale_price,cost_price,vat_rate,stock,unit,manages_stock').eq('active',true).order('name').limit(1000)
    if(error)setError(error.message);else setProducts((data||[]) as Product[])
   }
   if(mode==='sales'||mode==='stats'){
@@ -60,8 +63,38 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
   const edit=priceEdits[p.id];if(!edit)return
   const cost=Number(edit.cost),sale=Number(edit.sale)
   if(!Number.isFinite(cost)||!Number.isFinite(sale)||cost<0||sale<=0){setError('Ingresá costo válido y precio de venta mayor que cero.');return}
-  const {error}=await db.from('products').update({cost_price:cost,sale_price:sale}).eq('id',p.id)
+  const vat=Number(edit.vat);if(!Number.isFinite(vat)||vat<0||vat>100){setError('IVA inválido.');return}\n  const {error}=await db.from('products').update({cost_price:cost,sale_price:sale,vat_rate:vat}).eq('id',p.id)
   if(error)setError(error.message);else{setPriceEdits(v=>{const n={...v};delete n[p.id];return n});await load()}
+ }
+ async function importPriceFile(file:File){
+  setImporting(true);setImportMessage('Leyendo archivo…');setError('')
+  try{
+   const buffer=await file.arrayBuffer()
+   const workbook=XLSX.read(buffer,{type:'array'})
+   const sheet=workbook.Sheets[workbook.SheetNames[0]]
+   const rows:any[]=XLSX.utils.sheet_to_json(sheet,{defval:''})
+   if(!rows.length)throw new Error('El archivo no contiene filas de productos.')
+   const normalize=(v:string)=>v.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'')
+   const pick=(row:any,keys:string[])=>{const found=Object.keys(row).find(k=>keys.includes(normalize(k)));return found?row[found]:''}
+   const prepared=rows.map((r:any)=>{const name=String(pick(r,['articulo','producto','descripcion','nombre'])).trim();if(!name)return null;
+    const vat=Number(pick(r,['iva','alicuota','tasaiva'])||21)
+    const grossCost=Number(pick(r,['costoconiva','preciocompraconiva','compraconiva'])||0)
+    const netCost=Number(pick(r,['costosiniva','preciocompras iniva','comprasiniva','costo','preciocompra'])||0) || (grossCost/(1+vat/100))
+    const sale=Number(pick(r,['precioventaconiva','precioventa','venta','preciofinal'])||0)
+    const margin=Number(pick(r,['margen','margenganancia','porcentajeganancia'])||0)
+    const finalSale=sale>0?sale:netCost*(1+margin/100)*(1+vat/100)
+    return {name,barcode:String(pick(r,['codigobarra','codigodebarra','codigo','sku'])||'').trim()||null,cost_price:netCost,sale_price:finalSale,vat_rate:vat,active:true,manages_stock:true}
+   }).filter(Boolean) as any[]
+   if(!prepared.length)throw new Error('No encontré una columna Artículo/Producto/Descripción.')
+   let created=0,updated=0
+   for(const item of prepared){
+    const existing=products.find(p=>(item.barcode&&p.barcode===item.barcode)||p.name.toLowerCase()===item.name.toLowerCase())
+    if(existing){const {error}=await db.from('products').update({cost_price:item.cost_price,sale_price:item.sale_price,vat_rate:item.vat_rate,barcode:item.barcode||existing.barcode}).eq('id',existing.id);if(error)throw error;updated++}
+    else{const {error}=await db.from('products').insert(item);if(error)throw error;created++}
+   }
+   setImportMessage('Importación finalizada: '+created+' nuevos y '+updated+' actualizados.');await load()
+  }catch(e:any){setError(e.message||'No se pudo importar el archivo.');setImportMessage('')}
+  finally{setImporting(false)}
  }
  const title={sales:'Historial de ventas',cash:'Historial de cajas',pricing:'Listas de precios y rentabilidad',stats:'Estadísticas y reposición'}[mode]
  return <section className="management">
@@ -70,7 +103,7 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
   {loading?<div className="empty">Cargando información…</div>:null}
   {!loading&&mode==='sales'&&<div className="data-table"><div className="table-row table-head"><span>N.º / Fecha</span><span>Vendedor</span><span>Estado</span><span>Total</span></div>{sales.map(s=><div key={s.id}><button className="table-row table-button" onClick={()=>void expandSale(s)}><span><b>#{s.sale_number}</b><small>{date(s.sold_at)}</small></span><span>{profiles[s.cashier_id||'']||'—'}</span><span>{s.status}</span><b>{money(s.total)}</b></button>{expanded===s.id&&<div className="sale-detail"><b>Productos vendidos</b>{(items[s.id]||[]).map((i,n)=><div className="detail-line" key={n}><span>{i.product_name} · {i.quantity} {i.unit}</span><b>{money(i.line_total)}</b></div>)}<b>Medios de pago</b>{(payments[s.id]||[]).map((p,n)=><div className="detail-line" key={n}><span>{p.method}</span><b>{money(p.amount)}</b></div>)}</div>}</div>)}{!sales.length&&<div className="empty">Todavía no hay ventas registradas.</div>}</div>}
   {!loading&&mode==='cash'&&<div className="data-table"><div className="table-row table-head cash-table"><span>Apertura</span><span>Responsable</span><span>Cierre</span><span>Diferencia</span></div>{cash.map(c=>{const diff=c.closing_amount===null||c.expected_amount===null?null:Number(c.closing_amount)-Number(c.expected_amount);return <div className="table-row cash-table" key={c.id}><span><b>{money(c.opening_amount)}</b><small>{date(c.opened_at)}</small></span><span>{profiles[c.opened_by]||'—'}</span><span>{c.closed_at?<><b>{money(Number(c.closing_amount))}</b><small>{date(c.closed_at)}</small></>:'Caja abierta'}</span><b className={diff===null?'':diff===0?'positive':'negative'}>{diff===null?'—':money(diff)}</b></div>})}{!cash.length&&<div className="empty">Todavía no hay aperturas de caja.</div>}</div>}
-  {!loading&&mode==='pricing'&&<><div className="searchbox"><Search size={17}/><input placeholder="Buscar producto…" value={query} onChange={e=>setQuery(e.target.value)}/></div><div className="data-table"><div className="table-row price-table table-head"><span>Producto</span><span>Costo</span><span>Venta</span><span>Margen</span><span>Ganancia</span><span></span></div>{filteredProducts.map(p=>{const margin=p.sale_price?((p.sale_price-p.cost_price)/p.sale_price)*100:0;const gain=p.sale_price-p.cost_price;const edit=priceEdits[p.id];return <div className="table-row price-table" key={p.id}><span><b>{p.name}</b><small>Stock: {p.stock} {p.unit}</small></span><input aria-label="Costo" type="number" min="0" value={edit?.cost??String(p.cost_price)} onChange={e=>setPriceEdits(v=>({...v,[p.id]:{cost:e.target.value,sale:edit?.sale??String(p.sale_price)}}))}/><input aria-label="Venta" type="number" min="0.01" value={edit?.sale??String(p.sale_price)} onChange={e=>setPriceEdits(v=>({...v,[p.id]:{cost:edit?.cost??String(p.cost_price),sale:e.target.value}}))}/><b>{pct(margin)}</b><b>{money(gain)}</b><button className="icon-button" title="Guardar precios" onClick={()=>void savePrice(p)}><Save size={16}/></button></div>})}{!filteredProducts.length&&<div className="empty">No hay productos para mostrar.</div>}</div><h2 className="subheading"><History size={17}/> Últimos cambios de precios</h2><div className="data-table">{priceHistory.map(h=><div className="history-line" key={h.id}><span>{products.find(p=>p.id===h.product_id)?.name||'Producto'}</span><span>{money(h.old_sale_price)} → {money(h.new_sale_price)}</span><small>{date(h.changed_at)} · {profiles[h.changed_by||'']||'Usuario'}</small></div>)}{!priceHistory.length&&<p className="empty">Los cambios de precio que realices quedarán registrados aquí.</p>}</div></>}
+  {!loading&&mode==='pricing'&&<><div className="price-toolbar"><div className="searchbox"><Search size={17}/><input placeholder="Buscar producto…" value={query} onChange={e=>setQuery(e.target.value)}/></div><label className="primary import-button"><FileUp size={16}/> {importing?'Importando…':'Importar Excel'}<input type="file" accept=".xlsx,.xls,.csv" disabled={importing} onChange={e=>{const file=e.target.files?.[0];if(file)void importPriceFile(file);e.currentTarget.value=''}}/></label></div>{importMessage&&<p className="positive import-note">{importMessage}</p>}<p className="muted import-help">Subí un Excel con columnas como Artículo, Código, Costo sin IVA, IVA, Margen y Precio de venta con IVA. Se actualizan los productos existentes por código o nombre.</p><div className="data-table"><div className="table-row price-table table-head"><span>Producto</span><span>Costo s/IVA</span><span>IVA %</span><span>Costo c/IVA</span><span>Margen s/costo</span><span>Venta c/IVA</span><span>Ganancia</span><span></span></div>{filteredProducts.map(p=>{const edit=priceEdits[p.id];const cost=Number(edit?.cost??p.cost_price);const vat=Number(edit?.vat??p.vat_rate??21);const sale=Number(edit?.sale??p.sale_price);const costGross=cost*(1+vat/100);const saleNet=sale/(1+vat/100);const margin=cost>0?((saleNet-cost)/cost)*100:0;const gain=sale-costGross;return <div className="table-row price-table" key={p.id}><span><b>{p.name}</b><small>Stock: {p.stock} {p.unit}</small></span><input aria-label="Costo sin IVA" type="number" min="0" value={edit?.cost??String(p.cost_price)} onChange={e=>setPriceEdits(v=>({...v,[p.id]:{cost:e.target.value,vat:edit?.vat??String(p.vat_rate??21),sale:edit?.sale??String(p.sale_price)}}))}/><input aria-label="IVA porcentaje" type="number" min="0" max="100" value={edit?.vat??String(p.vat_rate??21)} onChange={e=>setPriceEdits(v=>({...v,[p.id]:{cost:edit?.cost??String(p.cost_price),vat:e.target.value,sale:edit?.sale??String(p.sale_price)}}))}/><b>{money(costGross)}</b><b>{pct(margin)}</b><input aria-label="Precio venta con IVA" type="number" min="0.01" value={edit?.sale??String(p.sale_price)} onChange={e=>setPriceEdits(v=>({...v,[p.id]:{cost:edit?.cost??String(p.cost_price),vat:edit?.vat??String(p.vat_rate??21),sale:e.target.value}}))}/><b>{money(gain)}</b><button className="icon-button" title="Guardar precios" onClick={()=>void savePrice(p)}><Save size={16}/></button></div>})}{!filteredProducts.length&&<div className="empty">No hay productos para mostrar.</div>}</div><h2 className="subheading"><History size={17}/> Últimos cambios de precios</h2><div className="data-table">{priceHistory.map(h=><div className="history-line" key={h.id}><span>{products.find(p=>p.id===h.product_id)?.name||'Producto'}</span><span>{money(h.old_sale_price)} → {money(h.new_sale_price)}</span><small>{date(h.changed_at)} · {profiles[h.changed_by||'']||'Usuario'}</small></div>)}{!priceHistory.length&&<p className="empty">Los cambios de precio que realices quedarán registrados aquí.</p>}</div></>}
   {!loading&&mode==='stats'&&<><div className="stats-cards"><div><TrendingUp/><small>Ventas registradas</small><b>{sales.length}</b></div><div><Receipt/><small>Facturación histórica</small><b>{money(sales.reduce((a,s)=>a+Number(s.total),0))}</b></div><div><Package/><small>Productos activos</small><b>{products.length}</b></div><div><Wallet/><small>Unidades vendidas</small><b>{sales.length?'Ver detalle por producto':''}{sales.length? '': '0'}</b></div></div><h2 className="subheading">Venta por producto y sugerencia de compra</h2><p className="muted">Cálculo sobre los últimos 30 días disponibles. La sugerencia contempla 14 días de cobertura; ajustala según el plazo real de cada proveedor.</p><div className="data-table"><div className="table-row stats-table table-head"><span>Producto</span><span>Unidades / 30 días</span><span>Promedio diario</span><span>Stock actual</span><span>Alcanza para</span><span>Comprar</span></div>{products.map(p=>{const sold=sales.filter(s=>new Date(s.sold_at).getTime()>Date.now()-30*86400000).reduce((sum,s)=>sum,0);return <ProductStat key={p.id} product={p} db={db} soldFallback={sold}/>})}</div></>}
  </section>
 }
