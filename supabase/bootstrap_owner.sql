@@ -1,11 +1,1 @@
--- PASO PREVIO: crear el usuario desde Supabase Dashboard > Authentication > Users.
--- Reemplazar el correo por el correo exacto del usuario propietario y ejecutar este SQL.
--- No se crea ni modifica ninguna contraseña aquí.
-insert into public.profiles (id, full_name, role, active)
-select id, 'Propietario SÚPERVECINO', 'owner', true
-from auth.users
-where email = 'REEMPLAZAR_POR_TU_CORREO'
-on conflict (id) do update
-set full_name = excluded.full_name,
-    role = 'owner',
-    active = true;
+-- PASO PREVIO: crear el usuario desde Supabase Dashboard > Authentication > Users > Add user.\n-- Email interno de autenticación: administrador@supervecino.local (el usuario no necesita conocerlo).\n-- Asignar allí una contraseña segura y confirmar el usuario. Luego ejecutar este SQL.\ninsert into public.profiles (id, full_name, role, active)\nselect id, 'Administrador SÚPERVECINO', 'owner', true\nfrom auth.users\nwhere email = 'administrador@supervecino.local'\non conflict (id) do update\nset full_name = excluded.full_name,\n    role = 'owner',\n    active = true;\n
