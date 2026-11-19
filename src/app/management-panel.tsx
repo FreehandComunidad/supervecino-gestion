@@ -75,8 +75,9 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
    const sheet=workbook.Sheets[workbook.SheetNames[0]]
    const rows:any[]=XLSX.utils.sheet_to_json(sheet,{defval:''})
    if(!rows.length)throw new Error('El archivo no contiene filas de productos.')
-   const normalize=(v:string)=>v.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'')
-   const pick=(row:any,keys:string[])=>{const found=Object.keys(row).find(k=>keys.includes(normalize(k)));return found?row[found]:''}\n   const num=(v:any)=>{if(typeof v==='number')return v;const t=String(v??'').trim().replace(/[$\\s]/g,'');if(!t)return 0;const normalized=t.includes(',')?t.replace(/\\./g,'').replace(',','.'):t;const n=Number(normalized);return Number.isFinite(n)?n:0}
+   const normalize=(v:string)=>v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'')
+   const pick=(row:any,keys:string[])=>{const found=Object.keys(row).find(k=>keys.includes(normalize(k)));return found?row[found]:''}
+   const num=(v:any)=>{if(typeof v==='number')return v;const t=String(v??'').trim().replace(/[$\s]/g,'');if(!t)return 0;const normalized=t.includes(',')?t.replace(/\./g,'').replace(',','.'):t;const n=Number(normalized);return Number.isFinite(n)?n:0}
    const prepared=rows.map((r:any)=>{const name=String(pick(r,['articulo','producto','descripcion','nombre'])).trim();if(!name)return null;
     const vat=num(pick(r,['iva','alicuota','tasaiva'])||21)
     const grossCost=num(pick(r,['costoconiva','preciocompraconiva','compraconiva'])||0)
