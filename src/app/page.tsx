@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { calculateSubtotal, calculateDiscount, calculateTotal } from '@/lib/pos-calculations'
-import { Search, ShoppingCart, Trash2, LogOut, Store, CreditCard, Banknote, Smartphone, X } from 'lucide-react'
+import { Search, ShoppingCart, Trash2, LogOut, Store, CreditCard, Banknote, Smartphone, X, Plus, Package } from 'lucide-react'
 
 type Product = { id: string; name: string; barcode: string | null; sku: string | null; sale_price: number; stock: number; unit: string; manages_stock: boolean }
 type CartItem = Product & { quantity: number }
@@ -27,11 +27,25 @@ export default function Home() {
   const [cashAmount, setCashAmount] = useState('0')
   const [closeAmount, setCloseAmount] = useState('0')
   const [cashBusy, setCashBusy] = useState(false)
+  const [profileRole, setProfileRole] = useState<string | null>(null)
+  const [showProductForm, setShowProductForm] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newBarcode, setNewBarcode] = useState('')
+  const [newSalePrice, setNewSalePrice] = useState('0')
+  const [newCostPrice, setNewCostPrice] = useState('0')
+  const [newStock, setNewStock] = useState('0')
+  const [newUnit, setNewUnit] = useState('unidad')
 
   const loadProducts = useCallback(async () => {
     const { data, error } = await supabase.from('products').select('id,name,barcode,sku,sale_price,stock,unit,manages_stock').eq('active', true).order('name').limit(500)
     if (error) setMessage(error.message)
     else setProducts((data ?? []) as Product[])
+  }, [supabase])
+  const loadProfile = useCallback(async () => {
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData.user) { setProfileRole(null); return }
+    const { data } = await supabase.from('profiles').select('role,active').eq('id', authData.user.id).maybeSingle()
+    setProfileRole(data?.active ? data.role : null)
   }, [supabase])
   const checkCash = useCallback(async () => {
     const { data, error } = await supabase.from('cash_sessions').select('id').is('closed_at', null).limit(1)
@@ -43,7 +57,7 @@ export default function Home() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user?.email ?? null))
     return () => listener.subscription.unsubscribe()
   }, [supabase])
-  useEffect(() => { if (user) { void loadProducts(); void checkCash() } }, [user, loadProducts, checkCash])
+  useEffect(() => { if (user) { void loadProducts(); void checkCash(); void loadProfile() } }, [user, loadProducts, checkCash, loadProfile])
   const filtered = products.filter(p => [p.name, p.barcode ?? '', p.sku ?? ''].some(v => v.toLowerCase().includes(search.toLowerCase())))
   const subtotal = calculateSubtotal(cart)
   const discountValue = calculateDiscount(subtotal, discount)
@@ -66,6 +80,14 @@ export default function Home() {
     const p = products.find(x => x.id === id)
     if (p?.manages_stock && qty > p.stock) { setMessage('La cantidad supera el stock disponible.'); return }
     setCart(c => c.map(i => i.id === id ? { ...i, quantity: qty } : i))
+  }
+  async function saveProduct(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setMessage('')
+    const { error } = await supabase.from('products').insert({ name: newName.trim(), barcode: newBarcode.trim() || null, sale_price: Number(newSalePrice), cost_price: Number(newCostPrice), stock: Number(newStock), unit: newUnit.trim() || 'unidad', manages_stock: true, active: true })
+    setBusy(false)
+    if (error) { setMessage(error.message); return }
+    setNewName(''); setNewBarcode(''); setNewSalePrice('0'); setNewCostPrice('0'); setNewStock('0'); setNewUnit('unidad'); setShowProductForm(false)
+    setMessage('Producto agregado correctamente.'); await loadProducts()
   }
   async function openCash() {
     setCashBusy(true); setMessage('')
@@ -103,7 +125,8 @@ export default function Home() {
   return <main className="app-shell">
     <header className="topbar"><div className="brand"><div className="brand-mark"><Store size={22}/></div><div><strong>SÚPERVECINO</strong><small>GESTIÓN COMERCIAL</small></div></div><div className="top-actions"><span className="user-label">{user}</span><button className="icon-button" onClick={async()=>{await supabase.auth.signOut();setCart([])}} title="Cerrar sesión"><LogOut size={18}/></button></div></header>
     <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><div className="cash-controls">{cashOpen === null ? <span className="status">Verificando caja…</span> : cashOpen ? <><span className="status open">Caja abierta</span><input aria-label="Efectivo contado al cierre" type="number" min="0" value={closeAmount} onChange={e=>setCloseAmount(e.target.value)} placeholder="Efectivo contado"/><button className="secondary" disabled={cashBusy} onClick={closeCash}>Cerrar caja</button></> : <><span className="status closed">Caja cerrada</span><input aria-label="Monto inicial de caja" type="number" min="0" value={cashAmount} onChange={e=>setCashAmount(e.target.value)} placeholder="Fondo inicial"/><button className="primary compact" disabled={cashBusy} onClick={openCash}>Abrir caja</button></>}</div></div>
-      <div className="searchbox"><Search size={19}/><input autoFocus placeholder="Buscar por nombre, código o barras…" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){const match=products.find(p=>p.barcode===search.trim()||p.sku===search.trim());if(match){add(match);setSearch('')}}}}/>{search && <button className="icon-button" onClick={()=>setSearch('')}><X size={17}/></button>}</div>
+      <div className="catalog-toolbar"><div className="searchbox"><Search size={19}/><input autoFocus placeholder="Buscar por nombre, código o barras…" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){const match=products.find(p=>p.barcode===search.trim()||p.sku===search.trim());if(match){add(match);setSearch('')}}}}/>{search && <button className="icon-button" onClick={()=>setSearch('')}><X size={17}/></button>}</div>{(profileRole === 'owner' || profileRole === 'manager') && <button className="secondary add-product" onClick={()=>setShowProductForm(v=>!v)}><Plus size={16}/> Nuevo producto</button>}</div>
+      {showProductForm && <form className="product-form" onSubmit={saveProduct}><div className="form-heading"><Package size={18}/><strong>Alta de producto</strong></div><div className="form-grid"><label>Nombre<input required value={newName} onChange={e=>setNewName(e.target.value)} /></label><label>Código de barras / SKU<input value={newBarcode} onChange={e=>setNewBarcode(e.target.value)} /></label><label>Precio de venta<input required type="number" min="0.01" step="0.01" value={newSalePrice} onChange={e=>setNewSalePrice(e.target.value)} /></label><label>Precio de costo<input type="number" min="0" step="0.01" value={newCostPrice} onChange={e=>setNewCostPrice(e.target.value)} /></label><label>Stock inicial<input type="number" min="0" step="0.001" value={newStock} onChange={e=>setNewStock(e.target.value)} /></label><label>Unidad<input value={newUnit} onChange={e=>setNewUnit(e.target.value)} /></label></div><div className="form-actions"><button type="button" className="secondary" onClick={()=>setShowProductForm(false)}>Cancelar</button><button className="primary compact" disabled={busy}>Guardar producto</button></div></form>}
       <div className="product-grid">{filtered.map(p=><button className="product-card" key={p.id} onClick={()=>add(p)}><span className="product-name">{p.name}</span><strong>{money(Number(p.sale_price))}</strong><small>{p.barcode || p.sku || 'Sin código'} · Stock: {p.stock}</small></button>)}</div>
       {!filtered.length && <div className="empty">No se encontraron productos.</div>}
     </section>
