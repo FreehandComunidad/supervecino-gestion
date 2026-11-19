@@ -41,3 +41,20 @@
 /* OASIS HQ agent chat */
 .oasis-chat{margin:18px 0 20px;border:1px solid #dfe8df;border-radius:13px;overflow:hidden;background:#fbfcf8}.oasis-chat-head{padding:13px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:#edf4ed;border-bottom:1px solid #dfe8df}.oasis-chat-head>div{display:flex;align-items:center;gap:8px;color:#4f8271}.oasis-chat-head b{font-size:10px;color:#31584f}.oasis-chat-head>small{font-size:8px;color:#82978b}.oasis-chat-messages{padding:14px;max-height:320px;min-height:115px;overflow:auto;display:flex;flex-direction:column;gap:10px}.oasis-chat-message{max-width:88%;padding:10px 12px;border-radius:11px;background:#eef3eb;color:#34594e}.oasis-chat-message.mine{align-self:flex-end;background:#1f5c53;color:#fff;border-bottom-right-radius:3px}.oasis-chat-message.theirs{align-self:flex-start;border-bottom-left-radius:3px}.oasis-chat-message small{font-size:8px;display:block;opacity:.7;margin-bottom:5px}.oasis-chat-message p{font-size:10px;line-height:1.6;white-space:pre-wrap;margin:0}.oasis-chat-empty{margin:auto;color:#91a096;font-size:9px;text-align:center;padding:20px}.oasis-chat-error{font-size:9px;color:#a54839;margin:0 14px 10px}.oasis-chat-compose{display:flex;gap:9px;align-items:end;padding:12px;border-top:1px solid #e7ece4}.oasis-chat-compose textarea{flex:1;min-width:0;resize:vertical;min-height:45px;max-height:110px;border:1px solid #dfe5db;background:#fff;border-radius:9px;padding:10px;color:#294e46;font:inherit;font-size:10px;outline:none}.oasis-chat-compose textarea:focus{border-color:#80aa98;box-shadow:0 0 0 3px #80aa981a}.oasis-chat-compose button{flex:none}.oasis-chat-foot{display:block;padding:0 14px 12px;color:#95a198;font-size:8px}
 @media(max-width:600px){.oasis-chat-head{align-items:flex-start;flex-direction:column}.oasis-chat-compose{align-items:stretch;flex-direction:column}.oasis-chat-compose button{width:100%}.oasis-chat-message{max-width:96%}}
+
+
+/* OASIS HQ — avatars and living mansion */
+.agent-avatar{overflow:hidden;flex:none;position:relative;border-radius:50%;padding:2px;background:linear-gradient(145deg,#e8d39c,#7bb9a4)}
+.agent-avatar img{width:100%;height:100%;display:block;object-fit:cover;border-radius:50%}
+.agent-avatar.large{width:78px;height:78px;border:3px solid #ead8a9;box-shadow:0 8px 24px #244e3d20}
+.oasis-walkers{position:absolute;inset:0;z-index:7;pointer-events:none}
+.oasis-walker{position:absolute;display:flex;align-items:center;flex-direction:column;gap:2px;animation:oasis-wander 5.5s ease-in-out infinite alternate}
+.oasis-walker img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 3px 10px #183d3444}
+.oasis-walker small{font-size:7px;font-weight:800;color:#fff;background:#174c49d9;padding:3px 6px;border-radius:10px;box-shadow:0 2px 5px #183d3433}
+@keyframes oasis-wander{0%{transform:translate3d(0,0,0)}35%{transform:translate3d(var(--travel),-5px,0)}70%{transform:translate3d(calc(var(--travel) * -0.4),0,0)}100%{transform:translate3d(var(--travel),-3px,0)}}
+.oasis-villa-art:after{content:"";position:absolute;inset:auto 0 0;height:40px;z-index:5;background:linear-gradient(0deg,#275f5140,transparent);pointer-events:none}
+.oasis-live span{animation:oasis-pulse 1.8s ease-in-out infinite}
+@keyframes oasis-pulse{0%,100%{box-shadow:0 0 0 0 #80c9a755}50%{box-shadow:0 0 0 7px #80c9a700}}
+.oasis-agent-list .agent-avatar{width:44px;height:44px}
+.oasis-agent-list button.selected .agent-avatar{box-shadow:0 0 0 3px #d7e8d9}
+@media(prefers-reduced-motion:reduce){.oasis-walker,.oasis-live span{animation:none}}
