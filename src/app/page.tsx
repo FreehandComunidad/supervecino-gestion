@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { calculateSubtotal, calculateDiscount, calculateTotal } from '@/lib/pos-calculations'
 import { Search, ShoppingCart, Trash2, LogOut, Store, CreditCard, Banknote, Smartphone, X } from 'lucide-react'
 
 type Product = { id: string; name: string; barcode: string | null; sku: string | null; sale_price: number; stock: number; unit: string; manages_stock: boolean }
@@ -44,9 +45,9 @@ export default function Home() {
   }, [supabase])
   useEffect(() => { if (user) { loadProducts(); checkCash() } }, [user])
   const filtered = products.filter(p => [p.name, p.barcode ?? '', p.sku ?? ''].some(v => v.toLowerCase().includes(search.toLowerCase())))
-  const subtotal = cart.reduce((sum, item) => sum + item.sale_price * item.quantity, 0)
-  const discountValue = Math.min(Math.max(Number(discount) || 0, 0), subtotal)
-  const total = Math.round(Math.max(0, subtotal - discountValue) * 100) / 100
+  const subtotal = calculateSubtotal(cart)
+  const discountValue = calculateDiscount(subtotal, discount)
+  const total = calculateTotal(subtotal, discountValue)
 
   function add(product: Product) {
     if (product.manages_stock && product.stock <= 0) { setMessage('No hay stock disponible de ese producto.'); return }
