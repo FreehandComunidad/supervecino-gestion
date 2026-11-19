@@ -23,6 +23,9 @@ export default function Home() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [cashOpen, setCashOpen] = useState<boolean | null>(null)
+  const [cashAmount, setCashAmount] = useState('0')
+  const [closeAmount, setCloseAmount] = useState('0')
+  const [cashBusy, setCashBusy] = useState(false)
 
   async function loadProducts() {
     const { data, error } = await supabase.from('products').select('id,name,barcode,sku,sale_price,stock,unit,manages_stock').eq('active', true).order('name').limit(500)
@@ -30,7 +33,7 @@ export default function Home() {
     else setProducts((data ?? []) as Product[])
   }
   async function checkCash() {
-    const { data, error } = await supabase.from('cash_sessions').select('id').eq('status', 'open').limit(1)
+    const { data, error } = await supabase.from('cash_sessions').select('id').is('closed_at', null).limit(1)
     if (error) setMessage(error.message)
     setCashOpen(Boolean(data?.length))
   }
@@ -43,7 +46,7 @@ export default function Home() {
   const filtered = products.filter(p => [p.name, p.barcode ?? '', p.sku ?? ''].some(v => v.toLowerCase().includes(search.toLowerCase())))
   const subtotal = cart.reduce((sum, item) => sum + item.sale_price * item.quantity, 0)
   const discountValue = Math.min(Math.max(Number(discount) || 0, 0), subtotal)
-  const total = Math.max(0, subtotal - discountValue)
+  const total = Math.round(Math.max(0, subtotal - discountValue) * 100) / 100
 
   function add(product: Product) {
     if (product.manages_stock && product.stock <= 0) { setMessage('No hay stock disponible de ese producto.'); return }
@@ -63,13 +66,25 @@ export default function Home() {
     if (p?.manages_stock && qty > p.stock) { setMessage('La cantidad supera el stock disponible.'); return }
     setCart(c => c.map(i => i.id === id ? { ...i, quantity: qty } : i))
   }
+  async function openCash() {
+    setCashBusy(true); setMessage('')
+    const { error } = await supabase.rpc('open_cash_session', { p_opening_amount: Number(cashAmount) })
+    setCashBusy(false)
+    if (error) setMessage(error.message); else { setMessage('Caja abierta correctamente.'); await checkCash() }
+  }
+  async function closeCash() {
+    setCashBusy(true); setMessage('')
+    const { data, error } = await supabase.rpc('close_cash_session', { p_closing_amount: Number(closeAmount), p_notes: null })
+    setCashBusy(false)
+    if (error) setMessage(error.message); else { setMessage('Caja cerrada. Esperado: ' + money(Number(data.expected_amount)) + ' · Diferencia: ' + money(Number(data.difference))); await checkCash() }
+  }
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMessage('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setBusy(false); if (error) setMessage(error.message)
   }
   async function finishSale() {
-    if (!cart.length) return
+    if (!cart.length || total <= 0) { setMessage('Agregá productos y verificá que el total sea mayor que cero.'); return }
     setBusy(true); setMessage('')
     const { data, error } = await supabase.rpc('create_pos_sale', {
       p_items: cart.map(i => ({ product_id: i.id, quantity: i.quantity })),
@@ -86,7 +101,7 @@ export default function Home() {
   if (!user) return <main className="center-screen"><form className="login-card" onSubmit={login}><div className="brand-mark"><Store size={26}/></div><p className="eyebrow">SISTEMA COMERCIAL</p><h1>SÚPERVECINO <span>GESTIÓN</span></h1><p className="muted">Ingresá con tu usuario para abrir el punto de venta.</p><label>Correo electrónico<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></label><label>Contraseña<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></label><button className="primary full" disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>{message && <p className="notice">{message}</p>}</form></main>
   return <main className="app-shell">
     <header className="topbar"><div className="brand"><div className="brand-mark"><Store size={22}/></div><div><strong>SÚPERVECINO</strong><small>GESTIÓN COMERCIAL</small></div></div><div className="top-actions"><span className="user-label">{user}</span><button className="icon-button" onClick={async()=>{await supabase.auth.signOut();setCart([])}} title="Cerrar sesión"><LogOut size={18}/></button></div></header>
-    <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><span className={cashOpen ? 'status open' : 'status closed'}>{cashOpen === null ? 'Verificando caja…' : cashOpen ? 'Caja abierta' : 'Caja cerrada'}</span></div>
+    <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><div className="cash-controls">{cashOpen === null ? <span className="status">Verificando caja…</span> : cashOpen ? <><span className="status open">Caja abierta</span><input aria-label="Efectivo contado al cierre" type="number" min="0" value={closeAmount} onChange={e=>setCloseAmount(e.target.value)} placeholder="Efectivo contado"/><button className="secondary" disabled={cashBusy} onClick={closeCash}>Cerrar caja</button></> : <><span className="status closed">Caja cerrada</span><input aria-label="Monto inicial de caja" type="number" min="0" value={cashAmount} onChange={e=>setCashAmount(e.target.value)} placeholder="Fondo inicial"/><button className="primary compact" disabled={cashBusy} onClick={openCash}>Abrir caja</button></>}</div></div>
       <div className="searchbox"><Search size={19}/><input autoFocus placeholder="Buscar por nombre, código o barras…" value={search} onChange={e=>setSearch(e.target.value)}/>{search && <button className="icon-button" onClick={()=>setSearch('')}><X size={17}/></button>}</div>
       <div className="product-grid">{filtered.map(p=><button className="product-card" key={p.id} onClick={()=>add(p)}><span className="product-name">{p.name}</span><strong>{money(Number(p.sale_price))}</strong><small>{p.barcode || p.sku || 'Sin código'} · Stock: {p.stock}</small></button>)}</div>
       {!filtered.length && <div className="empty">No se encontraron productos.</div>}
