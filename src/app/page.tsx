@@ -1,0 +1,105 @@
+"use client"
+
+import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Search, ShoppingCart, Trash2, LogOut, Store, CreditCard, Banknote, Smartphone, X } from 'lucide-react'
+
+type Product = { id: string; name: string; barcode: string | null; sku: string | null; sale_price: number; stock: number; unit: string; manages_stock: boolean }
+type CartItem = Product & { quantity: number }
+type PaymentMethod = 'cash' | 'debit' | 'credit' | 'transfer' | 'wallet'
+
+const money = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(n)
+
+export default function Home() {
+  const supabase = useMemo(() => createClient(), [])
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [user, setUser] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [search, setSearch] = useState('')
+  const [discount, setDiscount] = useState('0')
+  const [method, setMethod] = useState<PaymentMethod>('cash')
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('')
+  const [cashOpen, setCashOpen] = useState<boolean | null>(null)
+
+  async function loadProducts() {
+    const { data, error } = await supabase.from('products').select('id,name,barcode,sku,sale_price,stock,unit,manages_stock').eq('active', true).order('name').limit(500)
+    if (error) setMessage(error.message)
+    else setProducts((data ?? []) as Product[])
+  }
+  async function checkCash() {
+    const { data, error } = await supabase.from('cash_sessions').select('id').eq('status', 'open').limit(1)
+    if (error) setMessage(error.message)
+    setCashOpen(Boolean(data?.length))
+  }
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user?.email ?? null))
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user?.email ?? null))
+    return () => listener.subscription.unsubscribe()
+  }, [supabase])
+  useEffect(() => { if (user) { loadProducts(); checkCash() } }, [user])
+  const filtered = products.filter(p => [p.name, p.barcode ?? '', p.sku ?? ''].some(v => v.toLowerCase().includes(search.toLowerCase())))
+  const subtotal = cart.reduce((sum, item) => sum + item.sale_price * item.quantity, 0)
+  const discountValue = Math.min(Math.max(Number(discount) || 0, 0), subtotal)
+  const total = Math.max(0, subtotal - discountValue)
+
+  function add(product: Product) {
+    if (product.manages_stock && product.stock <= 0) { setMessage('No hay stock disponible de ese producto.'); return }
+    setCart(current => {
+      const found = current.find(i => i.id === product.id)
+      if (found) {
+        if (product.manages_stock && found.quantity >= product.stock) { setMessage('La cantidad supera el stock disponible.'); return current }
+        return current.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
+      }
+      return [...current, { ...product, quantity: 1 }]
+    })
+    setMessage('')
+  }
+  function changeQty(id: string, qty: number) {
+    if (qty <= 0) { setCart(c => c.filter(i => i.id !== id)); return }
+    const p = products.find(x => x.id === id)
+    if (p?.manages_stock && qty > p.stock) { setMessage('La cantidad supera el stock disponible.'); return }
+    setCart(c => c.map(i => i.id === id ? { ...i, quantity: qty } : i))
+  }
+  async function login(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setMessage('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setBusy(false); if (error) setMessage(error.message)
+  }
+  async function finishSale() {
+    if (!cart.length) return
+    setBusy(true); setMessage('')
+    const { data, error } = await supabase.rpc('create_pos_sale', {
+      p_items: cart.map(i => ({ product_id: i.id, quantity: i.quantity })),
+      p_payments: [{ method, amount: total }],
+      p_discount: discountValue,
+      p_customer_id: null,
+      p_notes: null,
+    })
+    setBusy(false)
+    if (error) { setMessage(error.message); return }
+    setMessage('Venta registrada correctamente. N.º ' + (data?.sale_number ?? data?.id ?? ''))
+    setCart([]); setDiscount('0'); await loadProducts(); await checkCash()
+  }
+  if (!user) return <main className="center-screen"><form className="login-card" onSubmit={login}><div className="brand-mark"><Store size={26}/></div><p className="eyebrow">SISTEMA COMERCIAL</p><h1>SÚPERVECINO <span>GESTIÓN</span></h1><p className="muted">Ingresá con tu usuario para abrir el punto de venta.</p><label>Correo electrónico<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required /></label><label>Contraseña<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></label><button className="primary full" disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>{message && <p className="notice">{message}</p>}</form></main>
+  return <main className="app-shell">
+    <header className="topbar"><div className="brand"><div className="brand-mark"><Store size={22}/></div><div><strong>SÚPERVECINO</strong><small>GESTIÓN COMERCIAL</small></div></div><div className="top-actions"><span className="user-label">{user}</span><button className="icon-button" onClick={async()=>{await supabase.auth.signOut();setCart([])}} title="Cerrar sesión"><LogOut size={18}/></button></div></header>
+    <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><span className={cashOpen ? 'status open' : 'status closed'}>{cashOpen === null ? 'Verificando caja…' : cashOpen ? 'Caja abierta' : 'Caja cerrada'}</span></div>
+      <div className="searchbox"><Search size={19}/><input autoFocus placeholder="Buscar por nombre, código o barras…" value={search} onChange={e=>setSearch(e.target.value)}/>{search && <button className="icon-button" onClick={()=>setSearch('')}><X size={17}/></button>}</div>
+      <div className="product-grid">{filtered.map(p=><button className="product-card" key={p.id} onClick={()=>add(p)}><span className="product-name">{p.name}</span><strong>{money(Number(p.sale_price))}</strong><small>{p.barcode || p.sku || 'Sin código'} · Stock: {p.stock}</small></button>)}</div>
+      {!filtered.length && <div className="empty">No se encontraron productos.</div>}
+    </section>
+    <aside className="sale-panel"><div className="sale-title"><div><p className="eyebrow">NUEVA OPERACIÓN</p><h2>Venta actual</h2></div><span className="cart-count">{cart.reduce((s,i)=>s+i.quantity,0)} artículos</span></div>
+      <div className="cart-list">{cart.map(item=><div className="cart-row" key={item.id}><div className="cart-info"><strong>{item.name}</strong><small>{money(Number(item.sale_price))} c/u</small></div><div className="qty"><button onClick={()=>changeQty(item.id,item.quantity-1)}>−</button><input aria-label="Cantidad" type="number" min="1" value={item.quantity} onChange={e=>changeQty(item.id,Number(e.target.value))}/><button onClick={()=>changeQty(item.id,item.quantity+1)}>+</button></div><strong className="line-total">{money(Number(item.sale_price)*item.quantity)}</strong><button className="remove" onClick={()=>setCart(c=>c.filter(i=>i.id!==item.id))}><Trash2 size={16}/></button></div>)}
+      {!cart.length && <div className="empty-cart"><ShoppingCart size={34}/><strong>Tu venta está vacía</strong><span>Buscá un producto y agregalo.</span></div>}</div>
+      <div className="sale-bottom"><label className="discount-label">Descuento en pesos<input type="number" min="0" max={subtotal} value={discount} onChange={e=>setDiscount(e.target.value)}/></label><div className="totals"><div><span>Subtotal</span><strong>{money(subtotal)}</strong></div><div><span>Descuento</span><strong>− {money(discountValue)}</strong></div><div className="grand-total"><span>Total</span><strong>{money(total)}</strong></div></div>
+        <p className="payment-heading">Medio de pago</p><div className="payment-options">{([{id:'cash',label:'Efectivo',icon:<Banknote size={17}/>},{id:'debit',label:'Débito',icon:<CreditCard size={17}/>},{id:'credit',label:'Crédito',icon:<CreditCard size={17}/>},{id:'transfer',label:'Transfer.',icon:<Smartphone size={17}/>},{id:'wallet',label:'Billetera',icon:<Smartphone size={17}/>} ] as const).map(m=><button key={m.id} className={method===m.id?'payment active':'payment'} onClick={()=>setMethod(m.id)}>{m.icon}{m.label}</button>)}</div>
+        <button className="primary full checkout" disabled={busy || !cart.length || !cashOpen} onClick={finishSale}>{busy?'Procesando…': 'Cobrar ' + money(total)}</button>
+        {!cashOpen && <p className="hint">Para registrar ventas primero debe existir una caja abierta.</p>}
+      </div>
+    </aside></div>
+    {message && <div className="toast" role="status">{message}<button onClick={()=>setMessage('')}><X size={15}/></button></div>}
+  </main>
+}
