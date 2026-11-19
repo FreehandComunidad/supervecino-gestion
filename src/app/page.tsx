@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { calculateSubtotal, calculateDiscount, calculateTotal } from '@/lib/pos-calculations'
 import { Search, ShoppingCart, Trash2, LogOut, Store, CreditCard, Banknote, Smartphone, X } from 'lucide-react'
@@ -28,22 +28,22 @@ export default function Home() {
   const [closeAmount, setCloseAmount] = useState('0')
   const [cashBusy, setCashBusy] = useState(false)
 
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     const { data, error } = await supabase.from('products').select('id,name,barcode,sku,sale_price,stock,unit,manages_stock').eq('active', true).order('name').limit(500)
     if (error) setMessage(error.message)
     else setProducts((data ?? []) as Product[])
-  }
-  async function checkCash() {
+  }, [supabase])
+  const checkCash = useCallback(async () => {
     const { data, error } = await supabase.from('cash_sessions').select('id').is('closed_at', null).limit(1)
     if (error) setMessage(error.message)
     setCashOpen(Boolean(data?.length))
-  }
+  }, [supabase])
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user?.email ?? null))
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user?.email ?? null))
     return () => listener.subscription.unsubscribe()
   }, [supabase])
-  useEffect(() => { if (user) { loadProducts(); checkCash() } }, [user])
+  useEffect(() => { if (user) { void loadProducts(); void checkCash() } }, [user, loadProducts, checkCash])
   const filtered = products.filter(p => [p.name, p.barcode ?? '', p.sku ?? ''].some(v => v.toLowerCase().includes(search.toLowerCase())))
   const subtotal = calculateSubtotal(cart)
   const discountValue = calculateDiscount(subtotal, discount)
