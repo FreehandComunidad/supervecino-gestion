@@ -63,7 +63,8 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
   const edit=priceEdits[p.id];if(!edit)return
   const cost=Number(edit.cost),sale=Number(edit.sale)
   if(!Number.isFinite(cost)||!Number.isFinite(sale)||cost<0||sale<=0){setError('Ingresá costo válido y precio de venta mayor que cero.');return}
-  const vat=Number(edit.vat);if(!Number.isFinite(vat)||vat<0||vat>100){setError('IVA inválido.');return}\n  const {error}=await db.from('products').update({cost_price:cost,sale_price:sale,vat_rate:vat}).eq('id',p.id)
+  const vat=Number(edit.vat);if(!Number.isFinite(vat)||vat<0||vat>100){setError('IVA inválido.');return}
+  const {error}=await db.from('products').update({cost_price:cost,sale_price:sale,vat_rate:vat}).eq('id',p.id)
   if(error)setError(error.message);else{setPriceEdits(v=>{const n={...v};delete n[p.id];return n});await load()}
  }
  async function importPriceFile(file:File){
