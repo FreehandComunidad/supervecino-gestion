@@ -7,7 +7,7 @@ Sistema web de gestión comercial para SÚPERVECINO.
 El primer módulo es el punto de venta (POS):
 - Inicio de sesión con Supabase Auth y perfiles activos.
 - Búsqueda por nombre, SKU y código de barras; lector de barras con Enter.
-- Carrito, cantidades, precios consultados en base de datos y descuento en pesos.
+- Alta de productos para propietario/encargado, carrito, cantidades, precios consultados en base de datos y descuento en pesos.
 - Medios de pago (un medio por operación en esta primera entrega).
 - Apertura y cierre de caja.
 - Registro atómico de ventas, pagos y movimientos de stock.
