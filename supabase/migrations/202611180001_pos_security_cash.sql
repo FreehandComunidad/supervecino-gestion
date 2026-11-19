@@ -68,7 +68,10 @@ begin
   insert into public.sales(customer_id,cashier_id,subtotal,discount,total,notes)
   values(p_customer_id,v_user,v_subtotal,p_discount,v_total,p_notes)
   returning id,sale_number into v_sale_id,v_sale_number;
-  for v_item in select value from jsonb_array_elements(p_items)
+  for v_item in
+    select jsonb_build_object('product_id',product_id,'quantity',sum(quantity))
+    from (select (value->>'product_id')::uuid product_id,(value->>'quantity')::numeric quantity from jsonb_array_elements(p_items)) items
+    group by product_id
   loop
     select * into v_product from public.products where id=(v_item->>'product_id')::uuid for update;
     v_qty := (v_item->>'quantity')::numeric;
