@@ -8,6 +8,7 @@ import ManagementPanel from './management-panel'
 
 type Product = { id: string; name: string; barcode: string | null; sku: string | null; sale_price: number; stock: number; unit: string; manages_stock: boolean }
 type CartItem = Product & { quantity: number }
+type Category = { id:string; name:string; parent_id:string|null }
 type PaymentMethod = 'cash' | 'debit' | 'credit' | 'transfer' | 'wallet'
 
 const money = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 }).format(n)
@@ -37,11 +38,20 @@ export default function Home() {
   const [newCostPrice, setNewCostPrice] = useState('0')
   const [newStock, setNewStock] = useState('0')
   const [newUnit, setNewUnit] = useState('unidad')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [newCategoryId, setNewCategoryId] = useState('')
+  const [newSubcategoryId, setNewSubcategoryId] = useState('')
+  const [categoryName, setCategoryName] = useState('')
+  const [subcategoryName, setSubcategoryName] = useState('')
 
   const loadProducts = useCallback(async () => {
     const { data, error } = await supabase.from('products').select('id,name,barcode,sku,sale_price,stock,unit,manages_stock').eq('active', true).order('name').limit(500)
     if (error) setMessage(error.message)
     else setProducts((data ?? []) as Product[])
+  }, [supabase])
+  const loadCategories = useCallback(async () => {
+    const { data, error } = await supabase.from('categories').select('id,name,parent_id').eq('active', true).order('name')
+    if (!error) setCategories((data ?? []) as Category[])
   }, [supabase])
   const loadProfile = useCallback(async () => {
     const { data: authData } = await supabase.auth.getUser()
@@ -59,7 +69,7 @@ export default function Home() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => setUser(session?.user?.email ?? null))
     return () => listener.subscription.unsubscribe()
   }, [supabase])
-  useEffect(() => { if (user) { void loadProducts(); void checkCash(); void loadProfile() } }, [user, loadProducts, checkCash, loadProfile])
+  useEffect(() => { if (user) { void loadProducts(); void checkCash(); void loadProfile(); void loadCategories() } }, [user, loadProducts, checkCash, loadProfile, loadCategories])
   const filtered = products.filter(p => [p.name, p.barcode ?? '', p.sku ?? ''].some(v => v.toLowerCase().includes(search.toLowerCase())))
   const subtotal = calculateSubtotal(cart)
   const discountValue = calculateDiscount(subtotal, discount)
@@ -85,11 +95,20 @@ export default function Home() {
   }
   async function saveProduct(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMessage('')
-    const { error } = await supabase.from('products').insert({ name: newName.trim(), barcode: newBarcode.trim() || null, sale_price: Number(newSalePrice), cost_price: Number(newCostPrice), stock: Number(newStock), unit: newUnit.trim() || 'unidad', manages_stock: true, active: true })
+    const { error } = await supabase.from('products').insert({ name: newName.trim(), barcode: newBarcode.trim() || null, category_id: newCategoryId || null, subcategory_id: newSubcategoryId || null, sale_price: Number(newSalePrice), cost_price: Number(newCostPrice), stock: Number(newStock), unit: newUnit.trim() || 'unidad', manages_stock: true, active: true })
     setBusy(false)
     if (error) { setMessage(error.message); return }
-    setNewName(''); setNewBarcode(''); setNewSalePrice('0'); setNewCostPrice('0'); setNewStock('0'); setNewUnit('unidad'); setShowProductForm(false)
+    setNewName(''); setNewBarcode(''); setNewSalePrice('0'); setNewCostPrice('0'); setNewStock('0'); setNewUnit('unidad'); setNewCategoryId(''); setNewSubcategoryId(''); setShowProductForm(false)
     setMessage('Producto agregado correctamente.'); await loadProducts()
+  }
+  async function addCategory(isSubcategory:boolean) {
+    const name = (isSubcategory ? subcategoryName : categoryName).trim()
+    if (!name || (isSubcategory && !newCategoryId)) return
+    const { error } = await supabase.from('categories').insert({ name, parent_id: isSubcategory ? newCategoryId : null, active: true })
+    if (error) { setMessage(error.message); return }
+    if (isSubcategory) setSubcategoryName(''); else setCategoryName('')
+    await loadCategories()
+    setMessage(isSubcategory ? 'Subrubro creado.' : 'Rubro creado.')
   }
   async function openCash() {
     setCashBusy(true); setMessage('')
@@ -131,7 +150,7 @@ export default function Home() {
     <nav className="main-nav">{([{id:"pos",label:"Punto de venta"},{id:"sales",label:"Historial de ventas"},{id:"cash",label:"Historial de cajas"},{id:"pricing",label:"Precios y rentabilidad"},{id:"stats",label:"Estadísticas y compras"}] as const).map(item=><button key={item.id} className={section===item.id?"active":""} onClick={()=>setSection(item.id)}>{item.label}</button>)}</nav>
     {section === "pos" ? <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><div className="cash-controls">{cashOpen === null ? <span className="status">Verificando caja…</span> : cashOpen ? <><span className="status open">Caja abierta</span><input aria-label="Efectivo contado al cierre" type="number" min="0" value={closeAmount} onChange={e=>setCloseAmount(e.target.value)} placeholder="Efectivo contado"/><button className="secondary" disabled={cashBusy} onClick={closeCash}>Cerrar caja</button></> : <><span className="status closed">Caja cerrada</span><input aria-label="Monto inicial de caja" type="number" min="0" value={cashAmount} onChange={e=>setCashAmount(e.target.value)} placeholder="Fondo inicial"/><button className="primary compact" disabled={cashBusy} onClick={openCash}>Abrir caja</button></>}</div></div>
       <div className="catalog-toolbar"><div className="searchbox"><Search size={19}/><input autoFocus placeholder="Buscar por nombre, código o barras…" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){const match=products.find(p=>p.barcode===search.trim()||p.sku===search.trim());if(match){add(match);setSearch('')}}}}/>{search && <button className="icon-button" onClick={()=>setSearch('')}><X size={17}/></button>}</div>{(profileRole === 'owner' || profileRole === 'manager') && <button className="secondary add-product" onClick={()=>setShowProductForm(v=>!v)}><Plus size={16}/> Nuevo producto</button>}</div>
-      {showProductForm && <form className="product-form" onSubmit={saveProduct}><div className="form-heading"><Package size={18}/><strong>Alta de producto</strong></div><div className="form-grid"><label>Nombre<input required value={newName} onChange={e=>setNewName(e.target.value)} /></label><label>Código de barras / SKU<input value={newBarcode} onChange={e=>setNewBarcode(e.target.value)} /></label><label>Precio de venta<input required type="number" min="0.01" step="0.01" value={newSalePrice} onChange={e=>setNewSalePrice(e.target.value)} /></label><label>Precio de costo<input type="number" min="0" step="0.01" value={newCostPrice} onChange={e=>setNewCostPrice(e.target.value)} /></label><label>Stock inicial<input type="number" min="0" step="0.001" value={newStock} onChange={e=>setNewStock(e.target.value)} /></label><label>Unidad<input value={newUnit} onChange={e=>setNewUnit(e.target.value)} /></label></div><div className="form-actions"><button type="button" className="secondary" onClick={()=>setShowProductForm(false)}>Cancelar</button><button className="primary compact" disabled={busy}>Guardar producto</button></div></form>}
+      {showProductForm && <form className="product-form" onSubmit={saveProduct}><div className="form-heading"><Package size={18}/><strong>Alta de producto</strong></div><div className="form-grid"><label>Nombre<input required value={newName} onChange={e=>setNewName(e.target.value)} /></label><label>Código de barras / SKU<input value={newBarcode} onChange={e=>setNewBarcode(e.target.value)} /></label><label>Precio de venta<input required type="number" min="0.01" step="0.01" value={newSalePrice} onChange={e=>setNewSalePrice(e.target.value)} /></label><label>Precio de costo<input type="number" min="0" step="0.01" value={newCostPrice} onChange={e=>setNewCostPrice(e.target.value)} /></label><label>Stock inicial<input type="number" min="0" step="0.001" value={newStock} onChange={e=>setNewStock(e.target.value)} /></label><label>Unidad<input value={newUnit} onChange={e=>setNewUnit(e.target.value)} /></label><label>Rubro<select value={newCategoryId} onChange={e=>{setNewCategoryId(e.target.value);setNewSubcategoryId('')}}><option value="">Sin rubro</option>{categories.filter(c=>!c.parent_id).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Subrubro<select value={newSubcategoryId} onChange={e=>setNewSubcategoryId(e.target.value)} disabled={!newCategoryId}><option value="">Sin subrubro</option>{categories.filter(c=>c.parent_id===newCategoryId).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div><div className="category-quick"><div><input placeholder="Nuevo rubro" value={categoryName} onChange={e=>setCategoryName(e.target.value)}/><button type="button" className="secondary" onClick={()=>void addCategory(false)}>Crear rubro</button></div><div><input placeholder="Nuevo subrubro" value={subcategoryName} onChange={e=>setSubcategoryName(e.target.value)} disabled={!newCategoryId}/><button type="button" className="secondary" disabled={!newCategoryId} onClick={()=>void addCategory(true)}>Crear subrubro</button></div></div><div className="form-actions"><button type="button" className="secondary" onClick={()=>setShowProductForm(false)}>Cancelar</button><button className="primary compact" disabled={busy}>Guardar producto</button></div></form>}
       <div className="product-grid">{filtered.map(p=><button className="product-card" key={p.id} onClick={()=>add(p)}><span className="product-name">{p.name}</span><strong>{money(Number(p.sale_price))}</strong><small>{p.barcode || p.sku || 'Sin código'} · Stock: {p.stock}</small></button>)}</div>
       {!filtered.length && <div className="empty">No se encontraron productos.</div>}
     </section>
