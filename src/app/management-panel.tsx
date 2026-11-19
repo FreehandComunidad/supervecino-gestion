@@ -75,13 +75,13 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
    const rows:any[]=XLSX.utils.sheet_to_json(sheet,{defval:''})
    if(!rows.length)throw new Error('El archivo no contiene filas de productos.')
    const normalize=(v:string)=>v.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'')
-   const pick=(row:any,keys:string[])=>{const found=Object.keys(row).find(k=>keys.includes(normalize(k)));return found?row[found]:''}
+   const pick=(row:any,keys:string[])=>{const found=Object.keys(row).find(k=>keys.includes(normalize(k)));return found?row[found]:''}\n   const num=(v:any)=>{if(typeof v==='number')return v;const t=String(v??'').trim().replace(/[$\\s]/g,'');if(!t)return 0;const normalized=t.includes(',')?t.replace(/\\./g,'').replace(',','.'):t;const n=Number(normalized);return Number.isFinite(n)?n:0}
    const prepared=rows.map((r:any)=>{const name=String(pick(r,['articulo','producto','descripcion','nombre'])).trim();if(!name)return null;
-    const vat=Number(pick(r,['iva','alicuota','tasaiva'])||21)
-    const grossCost=Number(pick(r,['costoconiva','preciocompraconiva','compraconiva'])||0)
-    const netCost=Number(pick(r,['costosiniva','preciocompras iniva','comprasiniva','costo','preciocompra'])||0) || (grossCost/(1+vat/100))
-    const sale=Number(pick(r,['precioventaconiva','precioventa','venta','preciofinal'])||0)
-    const margin=Number(pick(r,['margen','margenganancia','porcentajeganancia'])||0)
+    const vat=num(pick(r,['iva','alicuota','tasaiva'])||21)
+    const grossCost=num(pick(r,['costoconiva','preciocompraconiva','compraconiva'])||0)
+    const netCost=num(pick(r,['costosiniva','preciocompras iniva','comprasiniva','costo','preciocompra'])||0) || (grossCost/(1+vat/100))
+    const sale=num(pick(r,['precioventaconiva','precioventa','venta','preciofinal'])||0)
+    const margin=num(pick(r,['margen','margenganancia','porcentajeganancia'])||0)
     const finalSale=sale>0?sale:netCost*(1+margin/100)*(1+vat/100)
     return {name,barcode:String(pick(r,['codigobarra','codigodebarra','codigo','sku'])||'').trim()||null,cost_price:netCost,sale_price:finalSale,vat_rate:vat,active:true,manages_stock:true}
    }).filter(Boolean) as any[]
