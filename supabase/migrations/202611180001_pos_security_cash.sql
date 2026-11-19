@@ -154,3 +154,30 @@ create policy categories_read_active on public.categories for select to authenti
 create policy categories_insert_managers on public.categories for insert to authenticated with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
 create policy categories_update_managers on public.categories for update to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager'))) with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
 create policy categories_delete_managers on public.categories for delete to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+
+-- Encapsular las rutinas privilegiadas en un esquema no expuesto por PostgREST.
+create schema if not exists private;
+revoke all on schema private from public, anon;
+grant usage on schema private to authenticated;
+alter function public.create_pos_sale(jsonb,jsonb,numeric,uuid,text) set schema private;
+alter function public.open_cash_session(numeric) set schema private;
+alter function public.close_cash_session(numeric,text) set schema private;
+grant execute on function private.create_pos_sale(jsonb,jsonb,numeric,uuid,text) to authenticated;
+grant execute on function private.open_cash_session(numeric) to authenticated;
+grant execute on function private.close_cash_session(numeric,text) to authenticated;
+create or replace function public.create_pos_sale(p_items jsonb,p_payments jsonb,p_discount numeric default 0,p_customer_id uuid default null,p_notes text default null)
+returns jsonb language sql security invoker set search_path=''
+as $$ select private.create_pos_sale(p_items,p_payments,p_discount,p_customer_id,p_notes); $$;
+create or replace function public.open_cash_session(p_opening_amount numeric default 0)
+returns uuid language sql security invoker set search_path=''
+as $$ select private.open_cash_session(p_opening_amount); $$;
+create or replace function public.close_cash_session(p_closing_amount numeric,p_notes text default null)
+returns jsonb language sql security invoker set search_path=''
+as $$ select private.close_cash_session(p_closing_amount,p_notes); $$;
+revoke all on function public.create_pos_sale(jsonb,jsonb,numeric,uuid,text) from public,anon;
+revoke all on function public.open_cash_session(numeric) from public,anon;
+revoke all on function public.close_cash_session(numeric,text) from public,anon;
+grant execute on function public.create_pos_sale(jsonb,jsonb,numeric,uuid,text) to authenticated;
+grant execute on function public.open_cash_session(numeric) to authenticated;
+grant execute on function public.close_cash_session(numeric,text) to authenticated;
+notify pgrst, 'reload schema';
