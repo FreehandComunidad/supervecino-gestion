@@ -146,11 +146,11 @@ create policy cash_sessions_read_active on public.cash_sessions for select to au
 -- Catálogo editable solo por propietario/encargado.
 drop policy if exists products_auth_access on public.products;
 create policy products_read_active on public.products for select to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active));
-create policy products_write_managers on public.products for all to authenticated
-using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')))
-with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+create policy products_insert_managers on public.products for insert to authenticated with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+create policy products_update_managers on public.products for update to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager'))) with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+create policy products_delete_managers on public.products for delete to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
 drop policy if exists categories_auth_access on public.categories;
 create policy categories_read_active on public.categories for select to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active));
-create policy categories_write_managers on public.categories for all to authenticated
-using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')))
-with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+create policy categories_insert_managers on public.categories for insert to authenticated with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+create policy categories_update_managers on public.categories for update to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager'))) with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
+create policy categories_delete_managers on public.categories for delete to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
