@@ -80,7 +80,7 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
    const prepared=rows.map((r:any)=>{const name=String(pick(r,['articulo','producto','descripcion','nombre'])).trim();if(!name)return null;
     const vat=num(pick(r,['iva','alicuota','tasaiva'])||21)
     const grossCost=num(pick(r,['costoconiva','preciocompraconiva','compraconiva'])||0)
-    const netCost=num(pick(r,['costosiniva','preciocompras iniva','comprasiniva','costo','preciocompra'])||0) || (grossCost/(1+vat/100))
+    const netCost=num(pick(r,['costosiniva','preciocomprasiniva','comprasiniva','costo','preciocompra'])||0) || (grossCost/(1+vat/100))
     const sale=num(pick(r,['precioventaconiva','precioventa','venta','preciofinal'])||0)
     const margin=num(pick(r,['margen','margenganancia','porcentajeganancia'])||0)
     const finalSale=sale>0?sale:netCost*(1+margin/100)*(1+vat/100)
