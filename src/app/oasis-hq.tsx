@@ -63,14 +63,14 @@ export default function OasisHQ(){
    ])
    if(orgError)throw orgError;if(businessError)throw businessError;if(agentError)throw agentError;if(taskError)throw taskError
    setOrganizationName(org.name);setBusinesses(businessRows||[]);setAgents(agentRows||[]);setTasks(taskRows||[])
-   if(agentRows?.length&&!selected)setSelected(agentRows[0].id)
-   if(!taskAgent&&agentRows?.length)setTaskAgent(agentRows[0].id)
-   if(!taskBusiness&&businessRows?.length)setTaskBusiness(businessRows[0].id)
+   if(agentRows?.length)setSelected(current=>current||agentRows[0].id)
+   if(agentRows?.length)setTaskAgent(current=>current||agentRows[0].id)
+   if(businessRows?.length)setTaskBusiness(current=>current||businessRows[0].id)
    const ids=(businessRows||[]).map((b:Business)=>b.id)
    if(ids.length){const {data:locRows,error:locError}=await supabase.from('business_locations').select('id,business_id,name,address,city,province').in('business_id',ids).eq('active',true);if(locError)throw locError;setLocations(locRows||[])}else setLocations([])
   }catch(e:any){setError(e.message||'No se pudo cargar OASIS HQ.')}
   finally{setLoading(false)}
- },[supabase,selected,taskAgent,taskBusiness])
+ },[supabase])
  useEffect(()=>{void load()},[load])
  const active=agents.find(a=>a.id===selected)||agents[0]
  const activeTasks=tasks.filter(t=>taskFilter==='all'||t.status===taskFilter)
