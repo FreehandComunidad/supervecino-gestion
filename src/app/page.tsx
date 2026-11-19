@@ -103,7 +103,9 @@ export default function Home() {
   }
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMessage('')
-    const normalizedUsername = username.trim().toLowerCase()\n    const authEmail = normalizedUsername === 'administrador' ? 'administrador@supervecino.local' : `${normalizedUsername}@supervecino.local`\n    const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password })
+    const normalizedUsername = username.trim().toLowerCase()
+    const authEmail = normalizedUsername === 'administrador' ? 'administrador@supervecino.local' : `${normalizedUsername}@supervecino.local`
+    const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password })
     setBusy(false); if (error) setMessage(error.message)
   }
   async function finishSale() {
