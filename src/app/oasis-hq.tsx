@@ -8,6 +8,7 @@ type Agent = {id:string;slug:string;name:string;job_title:string;department:stri
 type Business = {id:string;name:string;business_type:string|null;description:string|null;active:boolean}
 type Location = {id:string;business_id:string;name:string;address:string|null;city:string|null;province:string|null}
 type Task = {id:string;title:string;description:string|null;status:string;priority:string;created_at:string;assigned_agent_id:string|null;business_id:string|null}
+type ChatMessage = {id:string;sender_type:'user'|'agent'|'system';content:string;created_at:string}
 const rooms = [
  {id:'board',name:'Sala de directorio',desc:'Reuniones y decisiones',icon:Users,tag:'REUNIONES'},
  {id:'finance',name:'Oficina financiera',desc:'Números, márgenes y caja',icon:ChartNoAxesCombined,tag:'FINANZAS'},
@@ -44,6 +45,12 @@ export default function OasisHQ(){
  const [taskBusiness,setTaskBusiness]=useState('')
  const [taskPriority,setTaskPriority]=useState('normal')
  const [taskFilter,setTaskFilter]=useState('all')
+ const [chatMessages,setChatMessages]=useState<ChatMessage[]>([])
+ const [chatConversationId,setChatConversationId]=useState<string|null>(null)
+ const [chatDraft,setChatDraft]=useState('')
+ const [chatSending,setChatSending]=useState(false)
+ const [chatLoading,setChatLoading]=useState(false)
+ const [chatError,setChatError]=useState('')
  const load=useCallback(async()=>{
   setLoading(true);setError('')
   try{
@@ -73,6 +80,42 @@ export default function OasisHQ(){
  },[supabase])
  useEffect(()=>{void load()},[load])
  const active=agents.find(a=>a.id===selected)||agents[0]
+ useEffect(()=>{
+  if(!active?.id||!organizationId||!userId){setChatMessages([]);setChatConversationId(null);return}
+  let cancelled=false
+  async function loadChat(){
+   setChatLoading(true);setChatError('')
+   const {data:conversation}=await supabase.from('oasis_conversations').select('id').eq('organization_id',organizationId).eq('primary_agent_id',active!.id).eq('created_by',userId).order('updated_at',{ascending:false}).limit(1).maybeSingle()
+   if(cancelled)return
+   setChatConversationId(conversation?.id||null)
+   if(conversation?.id){
+    const {data,error}=await supabase.from('oasis_messages').select('id,sender_type,content,created_at').eq('conversation_id',conversation.id).order('created_at',{ascending:true}).limit(40)
+    if(cancelled)return
+    if(error)setChatError(error.message)
+    setChatMessages((data||[]) as ChatMessage[])
+   }else setChatMessages([])
+   setChatLoading(false)
+  }
+  void loadChat()
+  return()=>{cancelled=true}
+ },[active?.id,organizationId,userId,supabase])
+ async function sendAgentMessage(e:React.FormEvent){
+  e.preventDefault()
+  const message=chatDraft.trim()
+  if(!message||!active||chatSending)return
+  setChatSending(true);setChatError('');setChatDraft('')
+  const localMessage:ChatMessage={id:'local-'+Date.now(),sender_type:'user',content:message,created_at:new Date().toISOString()}
+  setChatMessages(current=>[...current,localMessage])
+  try{
+   const response=await fetch('/api/oasis/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agentId:active.id,businessId:active.business_id||taskBusiness||null,conversationId:chatConversationId,message})})
+   const result=await response.json()
+   if(!response.ok)throw new Error(result.error||'No se pudo obtener respuesta del agente.')
+   setChatConversationId(result.conversationId)
+   const {data}=await supabase.from('oasis_messages').select('id,sender_type,content,created_at').eq('conversation_id',result.conversationId).order('created_at',{ascending:true}).limit(40)
+   setChatMessages((data||[]) as ChatMessage[])
+  }catch(error:any){setChatError(error.message||'No se pudo enviar el mensaje.')}
+  finally{setChatSending(false)}
+ }
  const activeTasks=tasks.filter(t=>taskFilter==='all'||t.status===taskFilter)
  const completed=tasks.filter(t=>t.status==='completed').length
  async function addBusiness(e:React.FormEvent){
@@ -128,7 +171,7 @@ export default function OasisHQ(){
    {!loading&&tab==='agents'&&<>
     <div className="oasis-section-title"><div><span>02 / YOUR AI TEAM</span><h2>El equipo de la mansión</h2><p>Perfiles, responsabilidades y especialidades guardadas en la base de datos.</p></div><span className="oasis-weather-pill"><Bot size={14}/> {agents.length} perfiles</span></div>
     <div className="oasis-agent-layout"><div className="oasis-agent-list">{agents.map((a,i)=>{const Icon=agentIcons[i%agentIcons.length];return <button key={a.id} className={selected===a.id?'selected':''} onClick={()=>setSelected(a.id)}><span className="agent-avatar" style={{'--agent-color':agentColors[i%agentColors.length]} as React.CSSProperties}><Icon size={17}/></span><span><b>{a.name}</b><small>{a.job_title}</small></span><i>{a.status==='working'?'TRABAJANDO':a.status==='paused'?'PAUSADO':'DISPONIBLE'}</i></button>})}</div>
-     {active?<div className="oasis-agent-detail"><div className="agent-detail-top"><span className="agent-avatar large" style={{'--agent-color':agentColors[Math.max(0,agents.findIndex(a=>a.id===active.id))%agentColors.length]} as React.CSSProperties}>{active.name[0]}</span><div><span>AGENTE · {active.department.toUpperCase()}</span><h3>{active.name}</h3><p>{active.job_title}</p></div><span className="agent-ready">GUARDADO EN HQ</span></div><div className="agent-duty"><small>ESPECIALIDAD</small><p>{active.specialty||'Responsabilidades generales del departamento.'}</p></div><div className="agent-duty"><small>INSTRUCCIONES DEL PERFIL</small><p>{active.instructions||'Sin instrucciones configuradas.'}</p></div><div className="agent-chat-placeholder"><MessageSquare size={20}/><div><b>Motor de inteligencia artificial</b><p>El perfil ya está guardado y conectado a OASIS HQ. La ejecución autónoma y el chat con modelos de IA requieren conectar un proveedor de IA; todavía no se simulan respuestas.</p></div></div><button className="oasis-primary" onClick={()=>setTab('activity')}>Asignar una tarea <ArrowUpRight size={15}/></button></div>:<div className="oasis-agent-detail">No hay perfiles activos configurados.</div>}
+     {active?<div className="oasis-agent-detail"><div className="agent-detail-top"><span className="agent-avatar large" style={{'--agent-color':agentColors[Math.max(0,agents.findIndex(a=>a.id===active.id))%agentColors.length]} as React.CSSProperties}>{active.name[0]}</span><div><span>AGENTE · {active.department.toUpperCase()}</span><h3>{active.name}</h3><p>{active.job_title}</p></div><span className="agent-ready">GUARDADO EN HQ</span></div><div className="agent-duty"><small>ESPECIALIDAD</small><p>{active.specialty||'Responsabilidades generales del departamento.'}</p></div><div className="agent-duty"><small>INSTRUCCIONES DEL PERFIL</small><p>{active.instructions||'Sin instrucciones configuradas.'}</p></div><div className="oasis-chat"><div className="oasis-chat-head"><div><MessageSquare size={18}/><b>Conversación con {active.name}</b></div><small>Respuestas con IA · historial guardado</small></div><div className="oasis-chat-messages">{chatLoading?<p className="oasis-chat-empty">Cargando conversación…</p>:chatMessages.length?chatMessages.map(m=><div key={m.id} className={'oasis-chat-message '+(m.sender_type==='user'?'mine':'theirs')}><small>{m.sender_type==='user'?'Vos':active.name}</small><p>{m.content}</p></div>):<p className="oasis-chat-empty">Todavía no hay mensajes. Escribile a {active.name} para empezar.</p>}{chatSending&&<div className="oasis-chat-message theirs"><small>{active.name}</small><p>Estoy analizando tu consulta…</p></div>}</div>{chatError&&<p className="oasis-chat-error">{chatError}</p>}<form className="oasis-chat-compose" onSubmit={sendAgentMessage}><textarea value={chatDraft} onChange={e=>setChatDraft(e.target.value)} placeholder={'Escribile a '+active.name+'…'} maxLength={4000} rows={2}/><button className="oasis-primary" disabled={chatSending||!chatDraft.trim()}>{chatSending?'Enviando…':'Enviar'} <ArrowUpRight size={15}/></button></form><small className="oasis-chat-foot">El agente puede analizar y recomendar. No modifica caja, stock ni precios.</small></div><button className="oasis-primary" onClick={()=>setTab('activity')}>Asignar una tarea <ArrowUpRight size={15}/></button></div>:<div className="oasis-agent-detail">No hay perfiles activos configurados.</div>}
     </div>
    </>}
    {!loading&&tab==='activity'&&<>
