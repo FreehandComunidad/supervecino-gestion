@@ -149,8 +149,6 @@ alter table public.app_settings enable row level security;
 -- Políticas base: todas las operaciones requieren un perfil activo.
 drop policy if exists profiles_read_self on public.profiles;
 create policy profiles_read_self on public.profiles for select to authenticated using (id=(select auth.uid()));
-drop policy if exists profiles_update_self on public.profiles;
-create policy profiles_update_self on public.profiles for update to authenticated using (id=(select auth.uid())) with check (id=(select auth.uid()));
 
 drop policy if exists categories_auth_access on public.categories;
 create policy categories_auth_access on public.categories for all to authenticated using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active)) with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active));
