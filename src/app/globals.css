@@ -72,3 +72,36 @@
 .birthday-footer{border-top:1px solid #ffffff16;padding:22px 28px;display:flex;justify-content:center;align-items:center;gap:22px;color:#748278;font-size:8px;letter-spacing:2px}.birthday-footer span:nth-child(2){color:#d9b978;font-size:15px}
 @media(max-width:760px){.birthday-hero{min-height:350px;padding:60px 25px}.birthday-seal{width:104px;height:104px;right:25px;top:auto;bottom:25px;transform:none;opacity:.35}.birthday-seal b{font-size:28px}.birthday-seal span{font-size:6px}.birthday-hero h1{font-size:54px}.birthday-layout{grid-template-columns:1fr}.birthday-levels{padding:14px}.birthday-levels-head{padding-bottom:10px}.birthday-level{padding:10px 6px}.birthday-challenge{min-height:400px}.birthday-nav{padding:0 16px}.birthday-nav-right{font-size:7px;letter-spacing:.8px}.birthday-mark{font-size:9px;letter-spacing:1.4px}.birthday-welcome{align-items:flex-start;gap:12px;flex-direction:column}.birthday-progress-label{align-self:flex-end}}
 @media(max-width:420px){.birthday-hero h1{font-size:45px}.birthday-hero-meta{font-size:8px;gap:8px}.birthday-entry-card{padding:28px 22px}.birthday-footer{gap:10px;font-size:7px}}
+
+/* Birthday game — beginner guide */
+.birthday-guide-toggle-wrap{max-width:900px;margin:0 auto;padding:0 22px 28px}
+.birthday-guide-toggle{width:100%;display:flex;align-items:center;gap:12px;padding:16px 18px;background:#e8dfc9;color:#243329;border:1px solid #d9c99f;border-radius:3px;text-align:left;font-size:13px;font-weight:700;cursor:pointer}
+.birthday-guide-toggle span{margin-left:auto;font-size:20px;color:#806c43}
+.birthday-guide{max-width:900px;margin:0 auto 42px;padding:30px clamp(20px,5vw,48px);background:#f5f1e7;color:#29332d;border-radius:3px}
+.birthday-guide-heading{display:flex;align-items:center;gap:13px;color:#8b7547}
+.birthday-guide-heading .birthday-kicker{font-size:9px}
+.birthday-guide-heading h2{font:400 30px Georgia,serif;color:#202b24;margin:5px 0}
+.birthday-guide-intro,.birthday-guide-callout p,.birthday-guide-parts p,.birthday-guide-note,.birthday-mechanisms p,.birthday-guide-tip p{font-size:13px;line-height:1.75;color:#59635c}
+.birthday-guide-intro{margin:14px 0 22px}
+.birthday-guide-callout{padding:18px 20px;background:#ebe4d4;border-left:3px solid #a58c56;margin:18px 0 26px}
+.birthday-guide-callout>b,.birthday-guide-callout>strong{color:#28382e}
+.birthday-guide-callout p{margin:7px 0 0}
+.birthday-guide-callout ul{padding-left:19px;margin:0}.birthday-guide-callout li{font-size:12px;line-height:1.8;color:#59635c;margin:4px 0}
+.birthday-guide h3{font:700 12px Arial,sans-serif;letter-spacing:1.5px;color:#818780;margin:28px 0 12px;text-transform:uppercase}
+.birthday-guide-parts{border:1px solid #d9dcd5;background:#fff}
+.birthday-guide-parts>div{display:grid;grid-template-columns:155px 1fr;align-items:start;gap:18px;padding:18px;border-bottom:1px solid #e2e4df}
+.birthday-guide-parts>div:last-child{border-bottom:0}
+.guide-tag{display:inline-block;width:max-content;padding:8px 11px;color:white;font-size:10px;font-weight:800;letter-spacing:.5px}
+.guide-tag.definition{background:#247448}.guide-tag.mechanism{background:#bd3026}.guide-tag.indicator{background:#c56a08}
+.birthday-guide-parts p{margin:0}
+.birthday-guide-note{font-style:italic;margin:18px 0 24px}
+.birthday-mechanisms{display:grid;gap:10px}
+.birthday-mechanisms article{padding:18px 20px;background:#fff;border:1px solid #d9dcd5}
+.birthday-mechanisms h4{font:700 19px Georgia,serif;margin:0 0 10px;color:#343a35}
+.birthday-mechanisms p{margin:0 0 14px}
+.birthday-guide-subtitle{display:block;color:#929891;font-size:10px;letter-spacing:1.2px;margin:12px 0 9px}
+.birthday-indicators{display:flex;flex-wrap:wrap;gap:7px}
+.birthday-indicators span{border:1px solid #d3d6d1;padding:7px 10px;color:#626a63;font-size:11px}
+.birthday-guide-tip{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#e7ecdf;color:#65815e;margin-top:20px}
+.birthday-guide-tip svg{flex:none;margin-top:2px}.birthday-guide-tip p{margin:0}
+@media(max-width:560px){.birthday-guide{margin-left:12px;margin-right:12px;padding:24px 17px}.birthday-guide-parts>div{grid-template-columns:1fr;gap:10px}.birthday-guide-toggle-wrap{padding-left:12px;padding-right:12px}.birthday-guide-heading h2{font-size:26px}}
