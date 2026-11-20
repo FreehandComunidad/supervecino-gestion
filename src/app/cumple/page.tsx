@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, ArrowRight, LockKeyhole, Sparkles, Trophy, PartyPopper, KeyRound, BookOpen, Lightbulb } from 'lucide-react'
 
 const stages = [
@@ -50,11 +51,39 @@ export default function CumplePage() {
   const [notice, setNotice] = useState('')
   const [completed, setCompleted] = useState<number[]>([])
   const [showGuide, setShowGuide] = useState(false)
+  const [activeTab, setActiveTab] = useState<'today' | 'ranking'>('today')
+  const [leaderboard, setLeaderboard] = useState<{id:string;display_name:string;points:number}[]>([])
+  const [registering, setRegistering] = useState(false)
+  const [registrationError, setRegistrationError] = useState('')
+
+  async function loadLeaderboard() {
+    const supabase = createClient()
+    const { data, error } = await supabase.from('cryptic_guests').select('id, display_name, points').order('points', { ascending: false }).order('created_at', { ascending: true }).limit(100)
+    if (!error && data) setLeaderboard(data)
+  }
+
+  useEffect(() => {
+    if (activeTab === 'ranking') loadLeaderboard()
+  }, [activeTab])
 
   function enterGame(e: React.FormEvent) {
     e.preventDefault()
     if (!player.trim()) return
-    setStarted(true)
+    setRegistering(true)
+    setRegistrationError('')
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.from('cryptic_guests').insert({ display_name: player.trim(), points: 0 }).select('id').single()
+      if (error) throw error
+      localStorage.setItem('cryptic_guest_id', data.id)
+      localStorage.setItem('cryptic_guest_name', player.trim())
+      setStarted(true)
+      setActiveTab('today')
+    } catch (error) {
+      setRegistrationError(error instanceof Error ? error.message : 'No pudimos registrar tu nombre. Probá nuevamente.')
+    } finally {
+      setRegistering(false)
+    }
   }
 
   function checkAnswer(e: React.FormEvent) {
@@ -71,6 +100,16 @@ export default function CumplePage() {
       <div className="birthday-nav-right"><span className="live-dot"/> EXPERIENCIA PRIVADA</div>
     </header>
 
+    <div className="birthday-game-tabs">
+      <button className={activeTab === 'today' ? 'active' : ''} onClick={() => setActiveTab('today')}>HOY</button>
+      <button className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>RANKING</button>
+    </div>
+
+    {activeTab === 'ranking' ? <section className="birthday-ranking">
+      <div className="birthday-ranking-heading"><span className="birthday-kicker">LOS INVITADOS</span><h2>Tabla de posiciones</h2><p>El ranking de quienes participan, ordenado por puntos acumulados.</p></div>
+      {leaderboard.length ? <div className="birthday-ranking-list">{leaderboard.map((guest,index)=><div className={'birthday-ranking-row '+(index===0?'top-rank':'')} key={guest.id}><span className="birthday-rank-position">{String(index+1).padStart(2,'0')}</span><span className="birthday-rank-name">{guest.display_name}</span><b className="birthday-rank-points">{guest.points} <small>PTS</small></b></div>)}</div> : <div className="birthday-ranking-empty"><Trophy size={28}/><b>El ranking todavía está vacío</b><span>Cuando tus invitados se registren, aparecerán acá con sus puntos.</span></div>}
+      <button className="birthday-ranking-refresh" onClick={loadLeaderboard}>Actualizar ranking</button>
+    </section> : <>
     <section className="birthday-hero">
       <div className="birthday-orbit orbit-one"/><div className="birthday-orbit orbit-two"/>
       <div className="birthday-hero-content">
@@ -94,7 +133,8 @@ export default function CumplePage() {
         <form onSubmit={enterGame}>
           <label htmlFor="player-name">Tu nombre</label>
           <input id="player-name" value={player} onChange={e=>setPlayer(e.target.value)} placeholder="Ingresá tu nombre..." maxLength={32} required />
-          <button className="birthday-primary" type="submit">Comenzar aventura <ArrowRight size={17}/></button>
+          <button className="birthday-primary" type="submit" disabled={registering}>{registering ? 'Registrando...' : 'Comenzar aventura'} <ArrowRight size={17}/></button>
+          {registrationError && <p className="birthday-registration-error">{registrationError}</p>}
         </form>
         <small>Vas a recorrer los desafíos en orden.</small>
       </div>
@@ -125,6 +165,8 @@ export default function CumplePage() {
         </article>
       </div>
     </section>}
+
+    </>}
 
     <footer className="birthday-footer"><span>MADE FOR A SPECIAL DAY</span><span>✳</span><span>THE SECRET GAME · 2026</span></footer>
   </main>
