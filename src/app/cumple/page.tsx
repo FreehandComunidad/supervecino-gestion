@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, ArrowRight, LockKeyhole, Sparkles, Trophy, PartyPopper, KeyRound, BookOpen, Lightbulb } from 'lucide-react'
 
 const stages = [
-  { number: 1, title: 'Primer enigma', level: 'INICIO', description: 'El primer desafío abre el juego.' },
+  { number: 1, title: 'Cámara que perdió RA', level: 'INICIO', description: 'Cámara que perdió RA, vecino: ¿dónde duermo?' },
   { number: 2, title: 'Siguiente pista', level: 'NIVEL 02', description: 'Una nueva incógnita te espera.' },
   { number: 3, title: 'La tercera clave', level: 'NIVEL 03', description: 'Cada respuesta te acerca al final.' },
   { number: 4, title: 'Cuarto desafío', level: 'NIVEL 04', description: 'Poné a prueba tu ingenio.' },
@@ -155,11 +155,15 @@ export default function CumplePage() {
           <div className="birthday-challenge-icon">{stage.number===6?'✧':'?'}</div>
           <h2>{stage.title}</h2>
           <p>{stage.description}</p>
-          <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Acá aparecerá el críptico y sus pistas cuando definamos el contenido.</span></div></div>
-          <form className="birthday-answer" onSubmit={checkAnswer}>
-            <label htmlFor="game-answer">Tu respuesta</label>
-            <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." disabled/><button type="submit" disabled><ArrowRight size={17}/></button></div>
-          </form>
+          {stage.number === 1 ? <>
+            <div className="birthday-cryptic-clue"><span className="cryptic-material">Cámara</span> <span className="cryptic-indicator">que perdió</span> <span className="cryptic-material">RA</span>, vecino: <span className="cryptic-definition">¿dónde duermo?</span></div>
+            <div className="birthday-cryptic-legend"><span><i className="legend-definition"/> Define la respuesta</span><span><i className="legend-indicator"/> Indica cómo armarla: sustracción</span><span><i className="legend-material"/> El material: letras con las que se arma</span></div>
+            <form className="birthday-answer" onSubmit={checkAnswer}>
+              <label htmlFor="game-answer">Tu respuesta (4 letras)</label>
+              <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={12}/><button type="submit"><ArrowRight size={17}/></button></div>
+            </form>
+            {completed.includes(1) && <div className="birthday-solution"><b>SOLUCIÓN</b><strong>CAMA · sustracción</strong><span>CÁMARA sin RA = CAMA</span></div>}
+          </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Acá aparecerá el críptico cuando definamos el contenido.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
         </article>
