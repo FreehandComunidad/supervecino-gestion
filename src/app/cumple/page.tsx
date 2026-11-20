@@ -72,6 +72,7 @@ export default function CumplePage() {
   const [answer, setAnswer] = useState('')
   const [notice, setNotice] = useState('')
   const [completed, setCompleted] = useState<number[]>([])
+  const [surrendered, setSurrendered] = useState<number[]>([])
   const [showGuide, setShowGuide] = useState(false)
   const [activeTab, setActiveTab] = useState<'today' | 'ranking'>('today')
   const [leaderboard, setLeaderboard] = useState<{id:string;display_name:string;points:number}[]>([])
@@ -122,6 +123,24 @@ export default function CumplePage() {
     setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
     if (type === 'letter') setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answer.length, (previous[activeStage] || 0) + 1) }))
     else setVisibleHints(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
+  }
+
+  function surrenderChallenge() {
+    if (completed.includes(activeStage) || isAdvancing) return
+    if (!window.confirm('¿Querés rendirte en este críptico? Vas a recibir 0 puntos y pasar al siguiente.')) return
+    setCompleted(previous => [...previous, activeStage])
+    setSurrendered(previous => [...previous, activeStage])
+    setPointsByStage(previous => ({ ...previous, [activeStage]: 0 }))
+    setNotice('Te rendiste en este críptico. Sumás 0 puntos y pasás al siguiente.')
+    if (activeStage < stages.length) {
+      setIsAdvancing(true)
+      window.setTimeout(() => {
+        setActiveStage(current => current === activeStage ? activeStage + 1 : current)
+        setAnswer('')
+        setNotice('')
+        setIsAdvancing(false)
+      }, 1400)
+    }
   }
 
   function checkAnswer(e: React.FormEvent) {
@@ -221,8 +240,9 @@ export default function CumplePage() {
                 <label htmlFor="game-answer">Tu respuesta</label>
                 <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={20}/><button type="submit"><ArrowRight size={17}/></button></div>
               </form>
-              </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Avanzá al siguiente.</span></div>}
-            </> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
+              </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Podés rendirte para continuar.</span></div>}
+              <button type="button" className="birthday-surrender" onClick={surrenderChallenge} disabled={isAdvancing}>Rendirme y pasar al siguiente · 0 puntos</button>
+            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><span>0 puntos. Continuá con el próximo.</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}{isAdvancing ? ' Cargando el siguiente desafío…' : ''}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
