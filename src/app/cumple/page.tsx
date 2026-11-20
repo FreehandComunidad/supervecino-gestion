@@ -171,7 +171,13 @@ export default function CumplePage() {
         setAnswer('')
         setNotice('')
         setIsAdvancing(false)
-      }, 1400)
+      }, 4000)
+    } else {
+      setIsAdvancing(true)
+      window.setTimeout(() => {
+        setActiveTab('ranking')
+        setIsAdvancing(false)
+      }, 4000)
     }
   }
 
@@ -197,7 +203,14 @@ export default function CumplePage() {
           setAnswer('')
           setNotice('')
           setIsAdvancing(false)
-        }, 1400)
+        }, 4000)
+        } else {
+          setIsAdvancing(true)
+          window.setTimeout(() => {
+            setActiveTab('ranking')
+            setIsAdvancing(false)
+          }, 4000)
+        }
       }
     } else {
       const nextAttempts = (attemptsByStage[activeStage] || 0) + 1
@@ -268,7 +281,7 @@ export default function CumplePage() {
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / {String(stages.length).padStart(2,'0')}</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
           {stage.answer ? <>
-            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Oreja|revuelta|la noche sin dormir|Jacinto|esconde|lo que sostiene el pantalón|Lo que hornea el panadero|una época|guarda las migas en la mesa|Donde viaja la carta|junto a|la totalidad|abriga hasta las rodillas|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
+            <div className="birthday-cryptic-length">{stage.answer.length} LETRAS</div><div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Oreja|revuelta|la noche sin dormir|Jacinto|esconde|lo que sostiene el pantalón|Lo que hornea el panadero|una época|guarda las migas en la mesa|Donde viaja la carta|junto a|la totalidad|abriga hasta las rodillas|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
               const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
               return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
@@ -286,7 +299,7 @@ export default function CumplePage() {
               </form>
               </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Podés rendirte para continuar.</span></div>}
               <button type="button" className="birthday-surrender" onClick={surrenderChallenge} disabled={isAdvancing}>Rendirme y pasar al siguiente · 0 puntos</button>
-            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><span>0 puntos. Continuá con el próximo.</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
+            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><strong>{stage.answer}</strong><span>La respuesta era esta. Continuando en unos segundos…</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! La respuesta queda visible 4 segundos antes de continuar.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}{isAdvancing ? ' Cargando el siguiente desafío…' : ''}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
