@@ -165,14 +165,17 @@ export default function CumplePage() {
         <h1>Seis enigmas.<br/><em>Una gran sorpresa.</em></h1>
         <p>Una aventura de ingenio, pistas y respuestas. ¿Te animás a llegar hasta el final?</p>
         <div className="birthday-hero-meta"><span><KeyRound size={14}/> 6 DESAFÍOS</span><i/> <span><Trophy size={14}/> UN FINAL ESPECIAL</span></div>
+        <a className="birthday-hero-play" href="#entrada">▶ JUGAR</a>
       </div>
       <div className="birthday-seal"><span>THE</span><b>秘密</b><span>GAME</span></div>
     </section>
 
+    <section className="birthday-donation"><div><span className="birthday-kicker">MISIÓN SECUNDARIA 😂</span><h2>¿Me ayudás a llenar el barril?</h2><p>Estoy juntando para un barril de cerveza de 20 litros. Si te copás con el cumple, cualquier aporte suma.</p></div><button type="button" onClick={()=>{navigator.clipboard?.writeText("distri.sumando2")}}>COPIAR ALIAS <b>distri.sumando2</b></button><span className="birthday-keg" aria-hidden="true">🍺</span></section>
+
     <div className="birthday-guide-toggle-wrap"><button className="birthday-guide-toggle" onClick={()=>setShowGuide(!showGuide)}><BookOpen size={18}/>{showGuide?'Ocultar guía':'¿No sabés cómo jugar? Aprendé acá'}<span>{showGuide?'−':'+'}</span></button></div>
     {showGuide&&<HowToPlay/>}
 
-    {!started ? <section className="birthday-entry">
+    {!started ? <section className="birthday-entry" id="entrada">
       <div className="birthday-entry-card">
         <div className="birthday-card-icon"><PartyPopper size={22}/></div>
         <div className="birthday-kicker">ANTES DE COMENZAR</div>
