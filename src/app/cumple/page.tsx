@@ -55,6 +55,11 @@ export default function CumplePage() {
   const [leaderboard, setLeaderboard] = useState<{id:string;display_name:string;points:number}[]>([])
   const [registering, setRegistering] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
+  const [points, setPoints] = useState(100)
+  const [attempts, setAttempts] = useState(0)
+  const [usedHints, setUsedHints] = useState<string[]>([])
+  const [revealedLetters, setRevealedLetters] = useState(0)
+  const [visibleHints, setVisibleHints] = useState<string[]>([])
 
   async function loadLeaderboard() {
     const supabase = createClient()
@@ -152,17 +157,25 @@ export default function CumplePage() {
         </aside>
         <article className="birthday-challenge">
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
-          <div className="birthday-challenge-icon">{stage.number===6?'✧':'?'}</div>
-          <h2>{stage.title}</h2>
-          <p>{stage.description}</p>
+          <div className="birthday-scorebar"><span>PUNTAJE</span><strong>{points} PTS</strong><span>INTENTOS: {attempts}/5</span></div>
           {stage.number === 1 ? <>
-            <div className="birthday-cryptic-clue"><span className="cryptic-material">Cámara</span> <span className="cryptic-indicator">que perdió</span> <span className="cryptic-material">RA</span>, vecino: <span className="cryptic-definition">¿dónde duermo?</span></div>
-            <div className="birthday-cryptic-legend"><span><i className="legend-definition"/> Define la respuesta</span><span><i className="legend-indicator"/> Indica cómo armarla: sustracción</span><span><i className="legend-material"/> El material: letras con las que se arma</span></div>
-            <form className="birthday-answer" onSubmit={checkAnswer}>
-              <label htmlFor="game-answer">Tu respuesta (4 letras)</label>
-              <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={12}/><button type="submit"><ArrowRight size={17}/></button></div>
-            </form>
-            {completed.includes(1) && <div className="birthday-solution"><b>SOLUCIÓN</b><strong>CAMA · sustracción</strong><span>CÁMARA sin RA = CAMA</span></div>}
+            <div className="birthday-cryptic-clue">Cámara que perdió RA, vecino: ¿dónde duermo?</div>
+            {!completed.includes(1) ? <>
+              <div className="birthday-hint-buttons">
+                <button type="button" disabled={usedHints.includes('definition')} onClick={()=>requestHint('definition')}>Pista: definición <small>−10 pts</small></button>
+                <button type="button" disabled={usedHints.includes('indicator')} onClick={()=>requestHint('indicator')}>Pista: indicador <small>−10 pts</small></button>
+                <button type="button" disabled={usedHints.includes('material')} onClick={()=>requestHint('material')}>Pista: material <small>−10 pts</small></button>
+                <button type="button" disabled={usedHints.includes('letter')} onClick={()=>requestHint('letter')}>Revelar una letra <small>−10 pts</small></button>
+              </div>
+              {visibleHints.includes('definition') && <p className="birthday-hint-text">Definición: es el lugar donde descansás por la noche.</p>}
+              {visibleHints.includes('indicator') && <p className="birthday-hint-text">Indicador: «perdió» te pide quitar letras.</p>}
+              {visibleHints.includes('material') && <p className="birthday-hint-text">Material: una palabra que nombra un dispositivo para tomar fotografías.</p>}
+              {revealedLetters > 0 && <p className="birthday-hint-text">Letras iniciales: {'CAMA'.slice(0,revealedLetters).split('').join(' · ')}</p>}
+              <form className="birthday-answer" onSubmit={checkAnswer}>
+                <label htmlFor="game-answer">Tu respuesta</label>
+                <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={12}/><button type="submit"><ArrowRight size={17}/></button></div>
+              </form>
+            </> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>CAMA</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Acá aparecerá el críptico cuando definamos el contenido.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
