@@ -118,11 +118,10 @@ export default function CumplePage() {
       .toLowerCase()
     if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
       const earned = pointsByStage[activeStage] ?? 100
-      setCompleted(previous => {
-        if (previous.includes(activeStage)) return previous
+      if (!completed.includes(activeStage)) {
+        setCompleted(previous => [...previous, activeStage])
         setTotalPoints(total => total + earned)
-        return [...previous, activeStage]
-      })
+      }
       setNotice('¡Eso es! Encontraste la respuesta.')
       if (activeStage < stages.length) {
         setIsAdvancing(true)
