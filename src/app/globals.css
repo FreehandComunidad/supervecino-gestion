@@ -227,3 +227,16 @@
 .cryptic-mark.mark-definition{text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#9fc3ff}
 .cryptic-mark.mark-indicator{text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:#ffca70}
 .cryptic-mark.mark-material{text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:#8ee0b2}
+
+
+/* Birthday landing CTA and donation panel */
+.birthday-hero-play{display:inline-flex;align-items:center;justify-content:center;gap:12px;margin-top:26px;padding:15px 38px;border:2px solid #ffe28a;border-radius:999px;background:linear-gradient(110deg,#ffcf70,#ff8fa8);color:#351c43;text-decoration:none;font-weight:900;font-size:clamp(18px,2.5vw,24px);letter-spacing:1.5px;box-shadow:0 0 28px #ffbd7066,0 8px 25px #120a2688;transition:transform .18s,filter .18s}
+.birthday-hero-play:hover{transform:translateY(-3px) scale(1.025);filter:brightness(1.08)}
+.birthday-hero-play:active{transform:scale(.98)}
+.birthday-donation{position:relative;display:flex;align-items:center;justify-content:space-between;gap:22px;max-width:900px;margin:0 auto 34px;padding:24px clamp(18px,4vw,36px);overflow:hidden;border:1px solid #ffcf70aa;border-radius:18px;background:radial-gradient(ellipse at 90% 20%,#8b326f88,transparent 38%),linear-gradient(120deg,#371d4e,#211633);box-shadow:0 14px 36px #08051666;color:#fff4ed}
+.birthday-donation h2{margin:6px 0;font:700 clamp(21px,3vw,30px) Georgia,serif;color:#fff0f4}
+.birthday-donation p{max-width:520px;margin:0;color:#e3cde3;font-size:13px;line-height:1.65}
+.birthday-donation button{position:relative;z-index:1;display:grid;gap:5px;flex:none;padding:13px 18px;border:1px solid #ffda8d;border-radius:12px;background:#fff8ed;color:#42234a;font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer}
+.birthday-donation button b{font-size:17px;letter-spacing:0;text-transform:none;color:#6d3180}
+.birthday-keg{font-size:40px;position:absolute;right:12px;top:4px;opacity:.12;pointer-events:none}
+@media(max-width:650px){.birthday-hero-play{width:100%;max-width:320px}.birthday-donation{margin:0 14px 28px;align-items:stretch;flex-direction:column}.birthday-donation button{width:100%}}
