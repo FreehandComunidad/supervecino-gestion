@@ -266,3 +266,15 @@
 .secret-cover-play-hotspot{position:absolute;left:26.8%;top:54.7%;width:43.8%;height:10.1%;border:0;border-radius:999px;background:transparent;cursor:pointer;touch-action:manipulation}
 .secret-cover-play-hotspot:focus-visible{outline:4px solid #fff;outline-offset:4px;box-shadow:0 0 0 7px #ffbd27}
 @media(min-width:700px){.secret-cover{padding:12px}.secret-cover-image-wrap{width:min(calc(100vw - 24px),calc(100svh * 0.914));}}
+
+/* Birthday cover: animated visual duplicate of the printed JUGAR button */
+.secret-cover-play-hotspot{overflow:visible;isolation:isolate;animation:secret-play-float 1.65s ease-in-out infinite}
+.secret-cover-play-hotspot::before{content:"";position:absolute;inset:0;border-radius:999px;background-image:url('/secret-game-cover.webp');background-repeat:no-repeat;background-size:228.31% 990.1%;background-position:47.6% 60.8%;transform-origin:center;animation:secret-play-breathe 1.65s ease-in-out infinite;pointer-events:none}
+.secret-cover-play-hotspot:active::before{animation:none;transform:scale(.96)}
+@keyframes secret-play-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes secret-play-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+@media(prefers-reduced-motion:reduce){.secret-cover-play-hotspot,.secret-cover-play-hotspot::before{animation:none}}
+/* Remove the itinerary column so the active cryptic is the first content after the score header */
+.birthday-layout-direct{display:block!important;width:100%}
+.birthday-layout-direct .birthday-levels{display:none!important}
+.birthday-layout-direct .birthday-challenge{width:100%;max-width:none;margin:0}
