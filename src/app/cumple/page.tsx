@@ -110,7 +110,7 @@ export default function CumplePage() {
 
   function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
-    if (!stage.answer || completed.includes(activeStage)) return
+    if (!stage.answer || completed.includes(activeStage) || (attemptsByStage[activeStage] || 0) >= 5 || isAdvancing) return
     const normalizeAnswer = (value: string) => value
       .normalize('NFD')
       .replace(/\p{M}/gu, '')
@@ -133,9 +133,10 @@ export default function CumplePage() {
         }, 1400)
       }
     } else {
-      setAttemptsByStage(previous => ({ ...previous, [activeStage]: (previous[activeStage] || 0) + 1 }))
+      const nextAttempts = (attemptsByStage[activeStage] || 0) + 1
+      setAttemptsByStage(previous => ({ ...previous, [activeStage]: nextAttempts }))
       setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
-      setNotice('Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
+      setNotice(nextAttempts >= 5 ? 'Se terminaron los 5 intentos de este críptico. Podés seguir con el próximo desafío.' : 'Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
     }
   }
 
@@ -211,8 +212,9 @@ export default function CumplePage() {
               return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
             })}</div>
             {!completed.includes(activeStage) ? <>
+              {(attemptsByStage[activeStage] || 0) < 5 ? <>
               <div className="birthday-hint-buttons">
-                {(['definition','indicator','material','letter'] as const).map(type=><button key={type} type="button" disabled={(hintsByStage[activeStage] || []).includes(type)} onClick={()=>requestHint(type)}>{type==='definition'?'Pista: definición':type==='indicator'?'Pista: indicador':type==='material'?'Pista: material':'Revelar una letra'} <small>−10 pts</small></button>)}
+                {(['definition','indicator','material','letter'] as const).map(type=><button key={type} type="button" disabled={(hintsByStage[activeStage] || []).includes(type) || isAdvancing || (attemptsByStage[activeStage] || 0) >= 5} onClick={()=>requestHint(type)}>{type==='definition'?'Pista: definición':type==='indicator'?'Pista: indicador':type==='material'?'Pista: material':'Revelar una letra'} <small>−10 pts</small></button>)}
               </div>
               {(['definition','indicator','material'] as const).filter(type=>(visibleHints[activeStage] || []).includes(type)).map(type=><p className="birthday-hint-text" key={type}>{stage.hints[type]}</p>)}
               {(revealedLetters[activeStage] || 0)>0 && <p className="birthday-hint-text">Letras reveladas: {stage.answer.slice(0,revealedLetters[activeStage]).split('').join(' · ')}</p>}
@@ -220,6 +222,7 @@ export default function CumplePage() {
                 <label htmlFor="game-answer">Tu respuesta</label>
                 <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={20}/><button type="submit"><ArrowRight size={17}/></button></div>
               </form>
+              </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Avanzá al siguiente.</span></div>}
             </> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}{isAdvancing ? ' Cargando el siguiente desafío…' : ''}</p>}
