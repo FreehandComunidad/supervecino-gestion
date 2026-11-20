@@ -91,9 +91,26 @@ export default function CumplePage() {
     }
   }
 
+  function requestHint(type: string) {
+    if (usedHints.includes(type) || completed.includes(1)) return
+    setUsedHints(previous => [...previous, type])
+    setPoints(previous => Math.max(0, previous - 10))
+    if (type === 'letter') setRevealedLetters(previous => Math.min(4, previous + 1))
+    else setVisibleHints(previous => [...previous, type])
+  }
+
   function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
-    setNotice('Este críptico todavía está en preparación. Pronto vas a poder ingresar tu respuesta.')
+    if (activeStage !== 1 || completed.includes(1)) return
+    const normalized = answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toUpperCase()
+    if (normalized === 'CAMA') {
+      setCompleted(previous => previous.includes(1) ? previous : [...previous, 1])
+      setNotice('¡Eso es! Encontraste la respuesta.')
+    } else {
+      setAttempts(previous => previous + 1)
+      setPoints(previous => Math.max(0, previous - 10))
+      setNotice('Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
+    }
   }
 
   const stage = stages[activeStage - 1]
