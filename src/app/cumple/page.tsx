@@ -128,8 +128,8 @@ export default function CumplePage() {
     const normalizeAnswer = (value: string) => value
       .normalize('NFD')
       .replace(/\p{M}/gu, '')
-      .replace(/[^a-z]/g, '')
       .toLowerCase()
+      .replace(/[^a-z]/g, '')
     if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
       const earned = pointsByStage[activeStage] ?? 100
       if (!completed.includes(activeStage)) {
