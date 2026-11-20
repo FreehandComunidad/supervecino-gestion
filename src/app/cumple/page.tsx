@@ -102,14 +102,7 @@ export default function CumplePage() {
 
   async function unlockAdmin(e: React.FormEvent) {
     e.preventDefault()
-    const supabase = createClient()
-    const { error } = await supabase.rpc('reset_cryptic_ranking', { p_pin: adminPin }).then(async ({ error }) => {
-      if (!error) {
-        // La llamada se usa solo para validar el PIN; se vuelve a cargar el ranking luego.
-      }
-      return { error }
-    })
-    if (error) {
+    if (adminPin !== '2211') {
       setAdminUnlocked(false)
       setAdminMessage('Código incorrecto.')
       return
