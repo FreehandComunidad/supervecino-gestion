@@ -221,3 +221,9 @@
 .birthday-ranking-empty b{color:#fff1ec}
 .birthday-ranking-refresh{border-color:#ffd477;color:#ffd477;border-radius:10px}
 @media(max-width:760px){.birthday-hero:after{right:-8%;bottom:12px;opacity:.5}.birthday-seal{background:#2b1c4388;opacity:.8}}
+
+/* Hint markers underline the exact words in each cryptic clue */
+.cryptic-mark{padding-bottom:3px;text-decoration-thickness:3px;text-underline-offset:7px;text-decoration-skip-ink:none}
+.cryptic-mark.mark-definition{text-decoration-line:underline;text-decoration-style:solid;text-decoration-color:#9fc3ff}
+.cryptic-mark.mark-indicator{text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:#ffca70}
+.cryptic-mark.mark-material{text-decoration-line:underline;text-decoration-style:dotted;text-decoration-color:#8ee0b2}
