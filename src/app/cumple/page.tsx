@@ -5,12 +5,18 @@ import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, ArrowRight, LockKeyhole, Sparkles, Trophy, PartyPopper, KeyRound, BookOpen, Lightbulb } from 'lucide-react'
 
 const stages = [
-  { number: 1, title: 'Cámara que perdió RA', level: 'INICIO', description: 'Cámara que perdió RA, vecino: ¿dónde duermo?' },
-  { number: 2, title: 'Siguiente pista', level: 'NIVEL 02', description: 'Una nueva incógnita te espera.' },
-  { number: 3, title: 'La tercera clave', level: 'NIVEL 03', description: 'Cada respuesta te acerca al final.' },
-  { number: 4, title: 'Cuarto desafío', level: 'NIVEL 04', description: 'Poné a prueba tu ingenio.' },
-  { number: 5, title: 'Casi al final', level: 'NIVEL 05', description: 'Un último enigma antes del gran cierre.' },
-  { number: 6, title: 'El gran final', level: 'DESAFÍO FINAL', description: 'La respuesta final guarda una sorpresa.' },
+  { number: 1, title: 'Cámara que perdió RA', level: 'INICIO', clue: 'Cámara que perdió RA, vecino: ¿dónde duermo?', answer: 'CAMA',
+    hints: { definition: 'La definición pregunta por el lugar donde descansás por la noche.', indicator: '«Perdió» indica que hay que quitar letras.', material: 'El material es CÁMARA: un dispositivo para tomar fotografías.' },
+    parts: { material: ['Cámara', 'RA'], indicator: ['perdió'], definition: ['¿dónde duermo?'] } },
+  { number: 2, title: 'El lugar indicado', level: 'NIVEL 02', clue: 'A principios de 2892, encontré por fin el lugar indicado.', answer: 'DONDE',
+    hints: { definition: 'La definición es «el lugar indicado».', indicator: '«A principios» y «por fin» señalan que tomes letras iniciales y finales.', material: 'Los números se leen en palabras: dos, ocho, nueve, dos. Sumá la última letra de encontré.' },
+    parts: { material: ['2892', 'encontré'], indicator: ['principios', 'por fin'], definition: ['el lugar indicado'] } },
+  { number: 3, title: 'El dios más humano', level: 'NIVEL 03', clue: 'Pacífico la cabeza del agua y una masa redonda frita. Es el dios más humano de todos.', answer: 'MARADONA',
+    hints: { definition: 'La definición es «el dios más humano de todos».', indicator: '«La cabeza» pide tomar la primera letra de la palabra siguiente.', material: 'Pacífico aporta MAR; agua aporta A; una masa redonda frita es una DONA.' },
+    parts: { material: ['Pacífico', 'agua', 'masa redonda frita'], indicator: ['la cabeza'], definition: ['Es el dios más humano de todos'] } },
+  { number: 4, title: 'Cuarto desafío', level: 'NIVEL 04', clue: 'Un nuevo enigma te espera.', answer: '' },
+  { number: 5, title: 'Casi al final', level: 'NIVEL 05', clue: 'Un último enigma antes del gran cierre.', answer: '' },
+  { number: 6, title: 'El gran final', level: 'DESAFÍO FINAL', clue: 'La respuesta final guarda una sorpresa.', answer: '' },
 ]
 
 const mechanisms = [
@@ -58,8 +64,9 @@ export default function CumplePage() {
   const [points, setPoints] = useState(100)
   const [attempts, setAttempts] = useState(0)
   const [usedHints, setUsedHints] = useState<string[]>([])
-  const [revealedLetters, setRevealedLetters] = useState(0)
-  const [visibleHints, setVisibleHints] = useState<string[]>([])
+  const [revealedLetters, setRevealedLetters] = useState<Record<number, number>>({})
+  const [visibleHints, setVisibleHints] = useState<Record<number, string[]>>({})
+  const [hintsByStage, setHintsByStage] = useState<Record<number, string[]>>({})
 
   async function loadLeaderboard() {
     const supabase = createClient()
@@ -92,19 +99,21 @@ export default function CumplePage() {
   }
 
   function requestHint(type: string) {
-    if (usedHints.includes(type) || completed.includes(1)) return
-    setUsedHints(previous => [...previous, type])
+    const current = hintsByStage[activeStage] || []
+    if (current.includes(type) || completed.includes(activeStage)) return
+    setHintsByStage(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
     setPoints(previous => Math.max(0, previous - 10))
-    if (type === 'letter') setRevealedLetters(previous => Math.min(4, previous + 1))
-    else setVisibleHints(previous => [...previous, type])
+    if (type === 'letter') setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answer.length, (previous[activeStage] || 0) + 1) }))
+    else setVisibleHints(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
   }
 
   function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
-    if (activeStage !== 1 || completed.includes(1)) return
-    const normalized = answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toUpperCase()
-    if (normalized === 'CAMA') {
-      setCompleted(previous => previous.includes(1) ? previous : [...previous, 1])
+    if (!stage.answer || completed.includes(activeStage)) return
+    const normalized = answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
+    const expected = stage.answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
+    if (normalized === expected) {
+      setCompleted(previous => previous.includes(activeStage) ? previous : [...previous, activeStage])
       setNotice('¡Eso es! Encontraste la respuesta.')
     } else {
       setAttempts(previous => previous + 1)
@@ -166,7 +175,7 @@ export default function CumplePage() {
       <div className="birthday-layout">
         <aside className="birthday-levels">
           <div className="birthday-levels-head"><span className="birthday-kicker">TU RECORRIDO</span><b>Los seis desafíos</b></div>
-          {stages.map(item=><button key={item.number} className={'birthday-level '+(activeStage===item.number?'selected ':'')+(completed.includes(item.number)?'done':'')} onClick={()=>{setActiveStage(item.number);setAnswer('');setNotice('')}}>
+          {stages.map(item=><button key={item.number} className={'birthday-level '+(activeStage===item.number?'selected ':'')+(completed.includes(item.number)?'done':'')} onClick={()=>{setActiveStage(item.number);setAnswer('');setNotice('');setAttempts(0)}}>
             <span className="birthday-level-number">{completed.includes(item.number)?'✓':String(item.number).padStart(2,'0')}</span>
             <span className="birthday-level-copy"><b>{item.title}</b><small>{item.level}</small></span>
             {item.number===6&&!completed.includes(6)&&<LockKeyhole size={15}/>}
@@ -175,25 +184,24 @@ export default function CumplePage() {
         <article className="birthday-challenge">
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
           <div className="birthday-scorebar"><span>PUNTAJE</span><strong>{points} PTS</strong><span>INTENTOS: {attempts}/5</span></div>
-          {stage.number === 1 ? <>
-            <div className="birthday-cryptic-clue">Cámara que perdió RA, vecino: ¿dónde duermo?</div>
-            {!completed.includes(1) ? <>
+          {stage.answer ? <>
+            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|2892|principios|encontré|por fin|el lugar indicado|Pacífico|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part,index)=>{
+              const activeTypes = hintsByStage[activeStage] || []
+              const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some(term => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
+              return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some(term=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some(term=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
+            })}</div>
+            {!completed.includes(activeStage) ? <>
               <div className="birthday-hint-buttons">
-                <button type="button" disabled={usedHints.includes('definition')} onClick={()=>requestHint('definition')}>Pista: definición <small>−10 pts</small></button>
-                <button type="button" disabled={usedHints.includes('indicator')} onClick={()=>requestHint('indicator')}>Pista: indicador <small>−10 pts</small></button>
-                <button type="button" disabled={usedHints.includes('material')} onClick={()=>requestHint('material')}>Pista: material <small>−10 pts</small></button>
-                <button type="button" disabled={usedHints.includes('letter')} onClick={()=>requestHint('letter')}>Revelar una letra <small>−10 pts</small></button>
+                {(['definition','indicator','material','letter'] as const).map(type=><button key={type} type="button" disabled={(hintsByStage[activeStage] || []).includes(type)} onClick={()=>requestHint(type)}>{type==='definition'?'Pista: definición':type==='indicator'?'Pista: indicador':type==='material'?'Pista: material':'Revelar una letra'} <small>−10 pts</small></button>)}
               </div>
-              {visibleHints.includes('definition') && <p className="birthday-hint-text">Definición: es el lugar donde descansás por la noche.</p>}
-              {visibleHints.includes('indicator') && <p className="birthday-hint-text">Indicador: «perdió» te pide quitar letras.</p>}
-              {visibleHints.includes('material') && <p className="birthday-hint-text">Material: una palabra que nombra un dispositivo para tomar fotografías.</p>}
-              {revealedLetters > 0 && <p className="birthday-hint-text">Letras iniciales: {'CAMA'.slice(0,revealedLetters).split('').join(' · ')}</p>}
+              {(['definition','indicator','material'] as const).filter(type=>(visibleHints[activeStage] || []).includes(type)).map(type=><p className="birthday-hint-text" key={type}>{stage.hints[type]}</p>)}
+              {(revealedLetters[activeStage] || 0)>0 && <p className="birthday-hint-text">Letras reveladas: {stage.answer.slice(0,revealedLetters[activeStage]).split('').join(' · ')}</p>}
               <form className="birthday-answer" onSubmit={checkAnswer}>
                 <label htmlFor="game-answer">Tu respuesta</label>
-                <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={12}/><button type="submit"><ArrowRight size={17}/></button></div>
+                <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={20}/><button type="submit"><ArrowRight size={17}/></button></div>
               </form>
-            </> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>CAMA</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
-          </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Acá aparecerá el críptico cuando definamos el contenido.</span></div></div>}
+            </> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
+          </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
         </article>
