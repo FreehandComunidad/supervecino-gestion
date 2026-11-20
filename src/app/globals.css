@@ -240,3 +240,21 @@
 .birthday-donation button b{font-size:17px;letter-spacing:0;text-transform:none;color:#6d3180}
 .birthday-keg{font-size:40px;position:absolute;right:12px;top:4px;opacity:.12;pointer-events:none}
 @media(max-width:650px){.birthday-hero-play{width:100%;max-width:320px}.birthday-donation{margin:0 14px 28px;align-items:stretch;flex-direction:column}.birthday-donation button{width:100%}}
+
+/* THE SECRET GAME — portada aislada y acceso al juego */
+.birthday-game-shell{min-height:100svh;background:#10051f}
+.secret-cover{min-height:100svh;width:100%;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at 70% 25%,#6520a4 0,transparent 42%),linear-gradient(145deg,#10051f,#2a0644 58%,#10051f);padding:0}
+.secret-cover-art{width:100%;min-height:100svh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 12%,#ffcf5b55,transparent 8%),radial-gradient(circle at 80% 70%,#ff2ab655,transparent 20%)}
+.secret-cover-unavailable{width:min(100%,650px);min-height:min(94svh,900px);padding:clamp(28px,6vw,70px) 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:clamp(12px,3vh,25px);border:2px solid #e34aff;border-radius:32px;box-shadow:0 0 35px #e34aff88,inset 0 0 35px #e34aff22;color:#fff;background:linear-gradient(160deg,#1c0630ee,#35004bee 55%,#180529ee)}
+.secret-cover-unavailable>span{font-size:clamp(25px,6vw,46px);font-weight:900;color:#ffe5a2;text-shadow:0 3px 0 #9e4a00}
+.secret-cover-unavailable>strong{font-size:clamp(56px,13vw,108px);line-height:.82;font-weight:1000;letter-spacing:-.06em;color:#fff0bd;text-shadow:0 4px 0 #a45a00,0 0 25px #ffb52c}
+.secret-cover-unavailable em{font-style:normal;font-size:clamp(17px,4vw,28px);font-weight:900;color:#fff;border:2px solid #ff35c9;background:#c90089;padding:12px 24px;transform:rotate(-3deg);box-shadow:0 0 22px #ff35c9}
+.secret-cover-unavailable button{border:3px solid #ffe36c;border-radius:999px;padding:16px 60px;background:linear-gradient(#ffdb35,#e87500);color:#fff;font-size:clamp(27px,6vw,42px);font-weight:1000;box-shadow:0 0 28px #ffca39;cursor:pointer}
+.secret-cover-unavailable small{font-size:clamp(13px,3vw,19px);font-weight:700;color:#ffd9ff}
+.secret-cover-unavailable>b{font-size:clamp(22px,5vw,36px);font-style:italic}
+.secret-cover-alias{font-size:clamp(20px,5vw,34px)!important;line-height:1!important;letter-spacing:0!important;color:#241000!important;background:#ffe52e;border-radius:12px;padding:12px 20px;text-shadow:none!important}
+.secret-entry-screen{min-height:100svh;display:grid;place-items:center;padding:28px 16px;background:radial-gradient(ellipse at 50% 0%,#542078,#10051f 70%)}
+.secret-entry-back{position:absolute;top:20px;left:20px;background:transparent;border:1px solid #ffffff55;color:#fff;border-radius:10px;padding:10px 14px}
+.secret-entry-screen .birthday-entry{width:100%;max-width:540px}
+.secret-entry-screen .birthday-entry-card{background:#fff;border-radius:22px;padding:30px}
+@media(max-width:600px){.secret-cover-art{padding:10px}.secret-cover-unavailable{min-height:96svh;border-radius:22px;padding:24px 16px}.secret-entry-back{top:10px;left:10px}}
