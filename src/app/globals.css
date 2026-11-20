@@ -158,3 +158,66 @@
 .birthday-hint-text{padding:12px 14px;margin:8px 0;background:#26392e;border-left:2px solid #d9b978;color:#e8e1d1;font-size:12px;line-height:1.6}
 .birthday-solution{margin-top:18px}
 @media(max-width:480px){.birthday-hint-buttons{grid-template-columns:1fr}.birthday-scorebar{gap:8px}.birthday-scorebar strong{margin-right:8px}}
+
+/* Birthday party refresh — brighter, celebratory, still readable */
+.birthday-game{background:radial-gradient(ellipse at 12% 5%,#3c245b 0%,transparent 33%),radial-gradient(ellipse at 90% 18%,#5a2448 0%,transparent 30%),linear-gradient(145deg,#17152d 0%,#241a3b 48%,#151d32 100%);color:#fff8f0}
+.birthday-nav{border-bottom:1px solid #ffdb9b35;background:#17152d88;backdrop-filter:blur(12px)}
+.birthday-mark{color:#ffd477;text-shadow:0 0 18px #ffb84c55}
+.birthday-back{color:#f3dce8}
+.birthday-nav-right{color:#d9c2df}
+.live-dot{background:#8cf0bd;box-shadow:0 0 14px #8cf0bd}
+.birthday-game-tabs{background:#39244d;color:#fff}
+.birthday-game-tabs button{color:#f5e8f5}
+.birthday-game-tabs button.active{background:linear-gradient(135deg,#ffcc70,#ff8d9d);color:#321b3d}
+.birthday-hero{background:radial-gradient(ellipse at 78% 42%,#8b3c72 0%,#4b2b68 28%,#201a3b 70%);overflow:hidden}
+.birthday-hero:after{content:"🎈　✦　✧　🎉　✦　🎈";position:absolute;right:4%;bottom:22px;color:#ffd477;font-size:clamp(18px,3vw,32px);letter-spacing:12px;opacity:.8;white-space:nowrap}
+.birthday-eyebrow,.birthday-kicker{color:#ffd477}
+.birthday-hero h1 em{color:#ffbdc9;text-shadow:0 4px 28px #ff8fa055}
+.birthday-hero p{color:#f0ddec}
+.birthday-hero-meta{color:#fff0df}
+.birthday-seal{border-color:#ffda8d;outline-color:#ffda8d66;color:#ffda8d;background:#ffffff08;box-shadow:0 0 45px #ffb84c20}
+.birthday-orbit{border-color:#ffd47720}
+.birthday-entry-card{background:linear-gradient(145deg,#fff8ee,#fce6ed);box-shadow:0 22px 70px #09051b88;border:1px solid #fff}
+.birthday-card-icon{background:linear-gradient(135deg,#ffcf70,#ff8fa8);color:#48264c}
+.birthday-primary{background:linear-gradient(100deg,#743d83,#c44f78);box-shadow:0 8px 20px #7b3a7b33}
+.birthday-primary:hover{filter:brightness(1.1)}
+.birthday-play{position:relative}
+.birthday-welcome h2{color:#fff0f4}
+.birthday-progress{background:#ffffff25;border-radius:20px;overflow:hidden}
+.birthday-progress span{background:linear-gradient(90deg,#ffcb70,#ff8fa8,#b99cff);box-shadow:0 0 14px #ff9eb8}
+.birthday-levels,.birthday-challenge{background:linear-gradient(145deg,#302342,#211d39);border:1px solid #ffda8d35;box-shadow:0 16px 40px #09051b55;border-radius:16px}
+.birthday-levels-head>b{color:#fff0f4}
+.birthday-level{color:#f8edf7;border-color:#ffffff16;border-radius:10px}
+.birthday-level.selected{background:linear-gradient(100deg,#70427688,#a6426c55);outline:1px solid #ffbdc955}
+.birthday-level-number{border-color:#ffda8d66;color:#ffd477}
+.birthday-level.done .birthday-level-number{background:#8ce6b4;border-color:#8ce6b4;color:#183326}
+.birthday-challenge{background:radial-gradient(ellipse at 85% 0%,#70406b66,transparent 40%),linear-gradient(145deg,#302342,#211d39)}
+.birthday-challenge-top{color:#ffd477}
+.birthday-cryptic-clue{font:400 clamp(29px,4.5vw,44px)/1.42 Georgia,serif;color:#fff5e9;margin:38px 0 32px;text-shadow:0 5px 25px #100819}
+.birthday-scorebar{background:#17152d;border:1px solid #ffda8d44;border-radius:12px;color:#e8d4e9}
+.birthday-scorebar strong{color:#ffd477}
+.birthday-hint-buttons button{background:#493052;border:1px solid #ffcf7b88;color:#fff6ef;border-radius:11px;transition:transform .15s,filter .15s}
+.birthday-hint-buttons button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.15)}
+.birthday-hint-buttons button small{color:#ffd477}
+.birthday-hint-text{background:#473050;border-left-color:#ffcb70;color:#fff1e7;border-radius:0 10px 10px 0}
+.birthday-answer label{color:#f4d8e8}
+.birthday-answer input{background:#17152d;border:1px solid #ffda8d55;color:#fff;border-radius:10px}
+.birthday-answer input::placeholder{color:#bca9c2}
+.birthday-answer button{background:linear-gradient(135deg,#ffcf70,#ff8fa8);color:#39203d;border-radius:10px}
+.birthday-notice{color:#ffd477!important}
+.birthday-solution{background:#1d3c35;border:1px solid #8ce6b477;border-radius:12px;color:#eafff2}
+.birthday-solution b,.birthday-solution strong{color:#9cf0bd}
+.birthday-challenge-foot{color:#c5b5cf}
+.birthday-challenge-foot span:first-child{color:#ffd477}
+.birthday-guide-toggle{background:linear-gradient(100deg,#ffcf70,#ff9cae);color:#3a2141;border:0;border-radius:12px;box-shadow:0 8px 24px #08051655}
+.birthday-footer{border-color:#ffffff20;color:#c5b5cf}
+.birthday-footer span:nth-child(2){color:#ffd477}
+.birthday-ranking{color:#fff}
+.birthday-ranking-list{background:#302342;border-color:#ffda8d44;border-radius:14px;overflow:hidden}
+.birthday-ranking-row{color:#fff1ec}
+.birthday-ranking-row.top-rank{background:#65406c}
+.birthday-rank-points{color:#ffd477}
+.birthday-ranking-empty{border-color:#ffda8d66;color:#ffd477;border-radius:14px}
+.birthday-ranking-empty b{color:#fff1ec}
+.birthday-ranking-refresh{border-color:#ffd477;color:#ffd477;border-radius:10px}
+@media(max-width:760px){.birthday-hero:after{right:-8%;bottom:12px;opacity:.5}.birthday-seal{background:#2b1c4388;opacity:.8}}
