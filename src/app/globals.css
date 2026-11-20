@@ -105,3 +105,28 @@
 .birthday-guide-tip{display:flex;align-items:flex-start;gap:12px;padding:16px;background:#e7ecdf;color:#65815e;margin-top:20px}
 .birthday-guide-tip svg{flex:none;margin-top:2px}.birthday-guide-tip p{margin:0}
 @media(max-width:560px){.birthday-guide{margin-left:12px;margin-right:12px;padding:24px 17px}.birthday-guide-parts>div{grid-template-columns:1fr;gap:10px}.birthday-guide-toggle-wrap{padding-left:12px;padding-right:12px}.birthday-guide-heading h2{font-size:26px}}
+
+/* Cryptic game tabs and guest ranking */
+.birthday-game-tabs{display:grid;grid-template-columns:1fr 1fr;background:#e7ddc8;color:#1d211d}
+.birthday-game-tabs button{border:0;background:transparent;padding:19px 12px;color:#242720;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer}
+.birthday-game-tabs button.active{background:#d5c6a7}
+.birthday-ranking{min-height:65vh;max-width:850px;margin:0 auto;padding:58px 24px 90px}
+.birthday-ranking-heading{text-align:center;margin-bottom:30px}
+.birthday-ranking-heading .birthday-kicker{justify-content:center}
+.birthday-ranking-heading h2{font:400 clamp(30px,5vw,44px) Georgia,serif;color:#e8d6ae;margin:12px 0}
+.birthday-ranking-heading p{color:#aeb9ad;font-size:13px;line-height:1.7}
+.birthday-ranking-list{border:1px solid #ffffff24;background:#19251f}
+.birthday-ranking-row{display:flex;align-items:center;gap:16px;padding:17px 20px;border-bottom:1px solid #ffffff16;color:#e9eee7}
+.birthday-ranking-row:last-child{border-bottom:0}
+.birthday-ranking-row.top-rank{background:#293b2e}
+.birthday-rank-position{width:30px;color:#d9b978;font:400 17px Georgia,serif}
+.birthday-rank-name{flex:1;font-size:14px}
+.birthday-rank-points{color:#e4ca8e;font-size:15px;font-variant-numeric:tabular-nums}
+.birthday-rank-points small{font-size:8px;letter-spacing:1px;color:#9eaa9f}
+.birthday-ranking-empty{display:grid;justify-items:center;gap:12px;padding:42px 22px;border:1px dashed #ffffff35;color:#d9b978;text-align:center}
+.birthday-ranking-empty b{font:400 22px Georgia,serif;color:#eee8d9}
+.birthday-ranking-empty span{font-size:12px;color:#aeb9ad;line-height:1.6}
+.birthday-ranking-refresh{display:block;margin:18px auto 0;padding:11px 18px;border:1px solid #d9b97888;background:transparent;color:#e6d3a5;font-size:11px;cursor:pointer}
+.birthday-registration-error{color:#b94b40;font-size:11px;margin:5px 0 0}
+.birthday-primary:disabled{opacity:.6;cursor:wait}
+@media(max-width:520px){.birthday-ranking{padding:38px 15px 70px}.birthday-ranking-row{padding:15px 13px}.birthday-game-tabs button{padding:16px 8px}}
