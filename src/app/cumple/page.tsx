@@ -110,7 +110,7 @@ export default function CumplePage() {
   function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
     if (!stage.answer || completed.includes(activeStage)) return
-    const normalized = answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
+    const normalized = answer.normalize('NFD').replace(/\\p{M}/gu, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
     const expected = stage.answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
     if (normalized === expected) {
       setCompleted(previous => previous.includes(activeStage) ? previous : [...previous, activeStage])
@@ -122,7 +122,7 @@ export default function CumplePage() {
     }
   }
 
-  const stage = stages[activeStage - 1]
+  const stage = stages[activeStage - 1] as any
 
   return <main className="birthday-game">
     <header className="birthday-nav">
