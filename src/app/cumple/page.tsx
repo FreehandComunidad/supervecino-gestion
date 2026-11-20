@@ -17,17 +17,16 @@ const stages = [
   { number: 4, title: 'Alérgico a lo inmóvil', level: 'NIVEL 04', clue: 'Norte, Isla y el comienzo de Chocolate esconden a alguien alérgico a lo inmóvil.', answer: 'NICHO',
     hints: { definition: 'La definición es «alérgico a lo inmóvil».', indicator: '«El comienzo» indica que tomes la primera parte de la palabra que sigue.', material: 'Norte aporta N, Isla aporta I y Chocolate aporta CHO.' },
     parts: { material: ['Norte', 'Isla', 'Chocolate'], indicator: ['el comienzo'], definition: ['alérgico a lo inmóvil'] } },
-  { number: 5, title: 'Quinta identidad', level: 'NIVEL 05', clue: 'Enigma reservado para la identidad secreta.', answer: '' },
-  { number: 6, title: 'La noche sin dormir', level: 'NIVEL 06', clue: 'Oreja revuelta delata la noche sin dormir.', answer: 'OJERA',
+  { number: 5, title: 'La noche sin dormir', level: 'NIVEL 05', clue: 'Oreja revuelta delata la noche sin dormir.', answer: 'OJERA',
     hints: { definition: 'La definición es «la marca que delata la noche sin dormir».', indicator: '«Revuelta» indica que hay que reordenar las letras.', material: 'El material es OREJA. Al reordenar sus letras se obtiene OJERA.' },
     parts: { material: ['Oreja'], indicator: ['revuelta'], definition: ['la noche sin dormir'] } },
-  { number: 7, title: 'Lo que sostiene el pantalón', level: 'NIVEL 07', clue: 'Jacinto esconde lo que sostiene el pantalón.', answer: 'CINTO',
+  { number: 6, title: 'Lo que sostiene el pantalón', level: 'NIVEL 06', clue: 'Jacinto esconde lo que sostiene el pantalón.', answer: 'CINTO',
     hints: { definition: 'La definición es «lo que sostiene el pantalón».', indicator: '«Esconde» indica que la respuesta está oculta dentro de otra palabra.', material: 'Buscá la secuencia continua CINTO dentro de JaCINTO.' },
     parts: { material: ['Jacinto'], indicator: ['esconde'], definition: ['lo que sostiene el pantalón'] } },
-  { number: 8, title: 'Las migas en la mesa', level: 'NIVEL 08', clue: 'Lo que hornea el panadero en una época guarda las migas en la mesa.', answer: 'PANERA',
+  { number: 7, title: 'Las migas en la mesa', level: 'NIVEL 07', clue: 'Lo que hornea el panadero en una época guarda las migas en la mesa.', answer: 'PANERA',
     hints: { definition: 'La definición es «lo que guarda las migas en la mesa».', indicator: 'La pista combina dos definiciones para formar una palabra.', material: 'PAN es lo que hornea el panadero y ERA significa una época. PAN + ERA = PANERA.' },
     parts: { material: ['Lo que hornea el panadero', 'una época'], indicator: ['en'], definition: ['guarda las migas en la mesa'] } },
-  { number: 6, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',\n    hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },\n    parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
+  { number: 8, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',\n    hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },\n    parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
 ]
 
 const mechanisms = [
