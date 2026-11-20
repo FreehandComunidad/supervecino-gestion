@@ -185,15 +185,7 @@ export default function CumplePage() {
       </section> : <section className="birthday-play">
       <div className="birthday-welcome"><div><span className="birthday-kicker">PARTICIPANTE</span><h2>¡Vamos, {player.trim()}!</h2><span className="birthday-total-score">TOTAL ACUMULADO: <b>{totalPoints} PTS</b></span></div><span className="birthday-progress-label">{completed.length} / 6 COMPLETADOS</span></div>
       <div className="birthday-progress"><span style={{width: (completed.length / 6 * 100) + '%'}}/></div>
-      <div className="birthday-layout">
-        <aside className="birthday-levels">
-          <div className="birthday-levels-head"><span className="birthday-kicker">TU RECORRIDO</span><b>Los seis desafíos</b></div>
-          {stages.map(item=><button key={item.number} className={'birthday-level '+(activeStage===item.number?'selected ':'')+(completed.includes(item.number)?'done':'')} onClick={()=>{setActiveStage(item.number);setAnswer('');setNotice('');setIsAdvancing(false)}}>
-            <span className="birthday-level-number">{completed.includes(item.number)?'✓':String(item.number).padStart(2,'0')}</span>
-            <span className="birthday-level-copy"><b>{item.title}</b><small>{item.level}</small></span>
-            {item.number===6&&!completed.includes(6)&&<LockKeyhole size={15}/>}
-          </button>)}
-        </aside>
+      <div className="birthday-layout birthday-layout-direct">
         <article className="birthday-challenge">
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
