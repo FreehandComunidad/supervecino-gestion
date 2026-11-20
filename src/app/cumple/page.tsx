@@ -17,7 +17,16 @@ const stages = [
   { number: 4, title: 'Alérgico a lo inmóvil', level: 'NIVEL 04', clue: 'Norte, Isla y el comienzo de Chocolate esconden a alguien alérgico a lo inmóvil.', answer: 'NICHO',
     hints: { definition: 'La definición es «alérgico a lo inmóvil».', indicator: '«El comienzo» indica que tomes la primera parte de la palabra que sigue.', material: 'Norte aporta N, Isla aporta I y Chocolate aporta CHO.' },
     parts: { material: ['Norte', 'Isla', 'Chocolate'], indicator: ['el comienzo'], definition: ['alérgico a lo inmóvil'] } },
-  { number: 5, title: 'Casi al final', level: 'NIVEL 05', clue: 'Un último enigma antes del gran cierre.', answer: '' },
+  { number: 5, title: 'Quinta identidad', level: 'NIVEL 05', clue: 'Enigma reservado para la identidad secreta.', answer: '' },
+  { number: 6, title: 'La noche sin dormir', level: 'NIVEL 06', clue: 'Oreja revuelta delata la noche sin dormir.', answer: 'OJERA',
+    hints: { definition: 'La definición es «la marca que delata la noche sin dormir».', indicator: '«Revuelta» indica que hay que reordenar las letras.', material: 'El material es OREJA. Al reordenar sus letras se obtiene OJERA.' },
+    parts: { material: ['Oreja'], indicator: ['revuelta'], definition: ['la noche sin dormir'] } },
+  { number: 7, title: 'Lo que sostiene el pantalón', level: 'NIVEL 07', clue: 'Jacinto esconde lo que sostiene el pantalón.', answer: 'CINTO',
+    hints: { definition: 'La definición es «lo que sostiene el pantalón».', indicator: '«Esconde» indica que la respuesta está oculta dentro de otra palabra.', material: 'Buscá la secuencia continua CINTO dentro de JaCINTO.' },
+    parts: { material: ['Jacinto'], indicator: ['esconde'], definition: ['lo que sostiene el pantalón'] } },
+  { number: 8, title: 'Las migas en la mesa', level: 'NIVEL 08', clue: 'Lo que hornea el panadero en una época guarda las migas en la mesa.', answer: 'PANERA',
+    hints: { definition: 'La definición es «lo que guarda las migas en la mesa».', indicator: 'La pista combina dos definiciones para formar una palabra.', material: 'PAN es lo que hornea el panadero y ERA significa una época. PAN + ERA = PANERA.' },
+    parts: { material: ['Lo que hornea el panadero', 'una época'], indicator: ['en'], definition: ['guarda las migas en la mesa'] } },
   { number: 6, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',\n    hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },\n    parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
 ]
 
@@ -192,7 +201,7 @@ export default function CumplePage() {
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
           {stage.answer ? <>
-            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
+            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Oreja|revuelta|la noche sin dormir|Jacinto|esconde|lo que sostiene el pantalón|Lo que hornea el panadero|una época|guarda las migas en la mesa|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
               const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
               return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
