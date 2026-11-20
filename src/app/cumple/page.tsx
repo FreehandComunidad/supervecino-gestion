@@ -191,7 +191,7 @@ export default function CumplePage() {
             <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|2892|principios|encontré|por fin|el lugar indicado|Pacífico|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
               const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
-              return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some(term=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
+              return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
             })}</div>
             {!completed.includes(activeStage) ? <>
               <div className="birthday-hint-buttons">
