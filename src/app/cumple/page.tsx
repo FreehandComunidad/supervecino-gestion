@@ -14,7 +14,9 @@ const stages = [
   { number: 3, title: 'El dios más humano', level: 'NIVEL 03', clue: 'Océano la cabeza del agua y una masa redonda frita. Es el dios más humano de todos.', answer: 'MARADONA',
     hints: { definition: 'La definición es «el dios más humano de todos».', indicator: '«La cabeza» pide tomar la primera letra de la palabra siguiente.', material: 'Océano aporta MAR; agua aporta A; una masa redonda frita es una DONA.' },
     parts: { material: ['Océano', 'agua', 'masa redonda frita'], indicator: ['la cabeza'], definition: ['Es el dios más humano de todos'] } },
-  { number: 4, title: 'Cuarto desafío', level: 'NIVEL 04', clue: 'Un nuevo enigma te espera.', answer: '' },
+  { number: 4, title: 'Alérgico a lo inmóvil', level: 'NIVEL 04', clue: 'Norte, Isla y el comienzo de Chocolate esconden a alguien alérgico a lo inmóvil.', answer: 'NICHO',
+    hints: { definition: 'La definición es «alérgico a lo inmóvil».', indicator: '«El comienzo» indica que tomes la primera parte de la palabra que sigue.', material: 'Norte aporta N, Isla aporta I y Chocolate aporta CHO.' },
+    parts: { material: ['Norte', 'Isla', 'Chocolate'], indicator: ['el comienzo'], definition: ['alérgico a lo inmóvil'] } },
   { number: 5, title: 'Casi al final', level: 'NIVEL 05', clue: 'Un último enigma antes del gran cierre.', answer: '' },
   { number: 6, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',\n    hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },\n    parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
 ]
@@ -190,7 +192,7 @@ export default function CumplePage() {
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
           {stage.answer ? <>
-            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
+            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
               const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
               return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
