@@ -74,7 +74,11 @@ export default function CumplePage() {
   const [completed, setCompleted] = useState<number[]>([])
   const [surrendered, setSurrendered] = useState<number[]>([])
   const [showGuide, setShowGuide] = useState(false)
-  const [activeTab, setActiveTab] = useState<'today' | 'ranking'>('today')
+  const [activeTab, setActiveTab] = useState<'today' | 'ranking' | 'admin'>('today')
+  const [adminPin, setAdminPin] = useState('')
+  const [adminUnlocked, setAdminUnlocked] = useState(false)
+  const [adminMessage, setAdminMessage] = useState('')
+  const [resettingRanking, setResettingRanking] = useState(false)
   const [leaderboard, setLeaderboard] = useState<{id:string;display_name:string;points:number}[]>([])
   const [registering, setRegistering] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
@@ -95,6 +99,41 @@ export default function CumplePage() {
   useEffect(() => {
     if (activeTab === 'ranking') loadLeaderboard()
   }, [activeTab])
+
+  async function unlockAdmin(e: React.FormEvent) {
+    e.preventDefault()
+    const supabase = createClient()
+    const { error } = await supabase.rpc('reset_cryptic_ranking', { p_pin: adminPin }).then(async ({ error }) => {
+      if (!error) {
+        // La llamada se usa solo para validar el PIN; se vuelve a cargar el ranking luego.
+      }
+      return { error }
+    })
+    if (error) {
+      setAdminUnlocked(false)
+      setAdminMessage('Código incorrecto.')
+      return
+    }
+    setAdminUnlocked(true)
+    setAdminMessage('Acceso de administrador habilitado.')
+  }
+
+  async function resetRanking() {
+    if (!window.confirm('¿Seguro que querés reiniciar el ranking? Se eliminarán todos los participantes y sus puntajes.')) return
+    setResettingRanking(true)
+    setAdminMessage('')
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.rpc('reset_cryptic_ranking', { p_pin: adminPin })
+      if (error) throw error
+      setLeaderboard([])
+      setAdminMessage(`Ranking reiniciado. Se eliminaron ${data ?? 0} participantes.`)
+    } catch (error) {
+      setAdminMessage(error instanceof Error ? error.message : 'No se pudo reiniciar el ranking.')
+    } finally {
+      setResettingRanking(false)
+    }
+  }
 
   async function enterGame(e: React.FormEvent) {
     e.preventDefault()
@@ -211,8 +250,20 @@ export default function CumplePage() {
       <div className="birthday-game-tabs">
         <button className={activeTab === 'today' ? 'active' : ''} onClick={() => setActiveTab('today')}>HOY</button>
         <button className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>RANKING</button>
+        <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>ADMINISTRADOR</button>
       </div>
-      {activeTab === 'ranking' ? <section className="birthday-ranking">
+      {activeTab === 'admin' ? <section className="birthday-ranking">
+        <div className="birthday-ranking-heading"><span className="birthday-kicker">ACCESO RESTRINGIDO</span><h2>Administración</h2><p>Ingresá el código para habilitar las acciones de administrador.</p></div>
+        {!adminUnlocked ? <form className="birthday-admin-form" onSubmit={unlockAdmin}>
+          <label htmlFor="admin-pin">Código de administrador</label>
+          <input id="admin-pin" type="password" inputMode="numeric" value={adminPin} onChange={e=>setAdminPin(e.target.value)} placeholder="Ingresá el código" maxLength={12} required />
+          <button className="birthday-primary" type="submit">Habilitar administración</button>
+        </form> : <div className="birthday-admin-actions">
+          <p>Acceso habilitado.</p>
+          <button className="birthday-ranking-refresh" onClick={resetRanking} disabled={resettingRanking}>{resettingRanking ? 'Reiniciando...' : 'Reiniciar ranking'}</button>
+        </div>}
+        {adminMessage && <p className="birthday-hint-text" role="status">{adminMessage}</p>}
+      </section> : activeTab === 'ranking' ? <section className="birthday-ranking">
         <div className="birthday-ranking-heading"><span className="birthday-kicker">LOS INVITADOS</span><h2>Tabla de posiciones</h2><p>El ranking de quienes participan, ordenado por puntos acumulados.</p></div>
         {leaderboard.length ? <div className="birthday-ranking-list">{leaderboard.map((guest,index)=><div className={'birthday-ranking-row '+(index===0?'top-rank':'')} key={guest.id}><span className="birthday-rank-position">{String(index+1).padStart(2,'0')}</span><span className="birthday-rank-name">{guest.display_name}</span><b className="birthday-rank-points">{guest.points} <small>PTS</small></b></div>)}</div> : <div className="birthday-ranking-empty"><Trophy size={28}/><b>El ranking todavía está vacío</b><span>Cuando tus invitados se registren, aparecerán acá con sus puntos.</span></div>}
         <button className="birthday-ranking-refresh" onClick={loadLeaderboard}>Actualizar ranking</button>
