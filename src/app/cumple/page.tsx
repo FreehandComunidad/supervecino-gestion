@@ -51,6 +51,7 @@ function HowToPlay() {
 
 export default function CumplePage() {
   const [started, setStarted] = useState(false)
+  const [showEntry, setShowEntry] = useState(false)
   const [player, setPlayer] = useState('')
   const [activeStage, setActiveStage] = useState(1)
   const [answer, setAnswer] = useState('')
@@ -142,55 +143,51 @@ export default function CumplePage() {
 
   const stage = stages[activeStage - 1] as any
 
-  return <main className="birthday-game">
-    <header className="birthday-nav">
-      <a href="/" className="birthday-back"><ArrowLeft size={16}/> Volver</a>
-      <div className="birthday-mark"><span>✳</span> THE SECRET GAME</div>
-      <div className="birthday-nav-right"><span className="live-dot"/> EXPERIENCIA PRIVADA</div>
-    </header>
-
-    <div className="birthday-game-tabs">
-      <button className={activeTab === 'today' ? 'active' : ''} onClick={() => setActiveTab('today')}>HOY</button>
-      <button className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>RANKING</button>
-    </div>
-
-    {activeTab === 'ranking' ? <section className="birthday-ranking">
-      <div className="birthday-ranking-heading"><span className="birthday-kicker">LOS INVITADOS</span><h2>Tabla de posiciones</h2><p>El ranking de quienes participan, ordenado por puntos acumulados.</p></div>
-      {leaderboard.length ? <div className="birthday-ranking-list">{leaderboard.map((guest,index)=><div className={'birthday-ranking-row '+(index===0?'top-rank':'')} key={guest.id}><span className="birthday-rank-position">{String(index+1).padStart(2,'0')}</span><span className="birthday-rank-name">{guest.display_name}</span><b className="birthday-rank-points">{guest.points} <small>PTS</small></b></div>)}</div> : <div className="birthday-ranking-empty"><Trophy size={28}/><b>El ranking todavía está vacío</b><span>Cuando tus invitados se registren, aparecerán acá con sus puntos.</span></div>}
-      <button className="birthday-ranking-refresh" onClick={loadLeaderboard}>Actualizar ranking</button>
-    </section> : <>
-    <section className="birthday-hero">
-      <div className="birthday-orbit orbit-one"/><div className="birthday-orbit orbit-two"/>
-      <div className="birthday-hero-content">
-        <div className="birthday-eyebrow"><Sparkles size={14}/> UNA EXPERIENCIA PARA COMPARTIR</div>
-        <h1>Seis enigmas.<br/><em>Una gran sorpresa.</em></h1>
-        <p>Una aventura de ingenio, pistas y respuestas. ¿Te animás a llegar hasta el final?</p>
-        <div className="birthday-hero-meta"><span><KeyRound size={14}/> 6 DESAFÍOS</span><i/> <span><Trophy size={14}/> UN FINAL ESPECIAL</span></div>
-        <a className="birthday-hero-play" href="#entrada">▶ JUGAR</a>
+  return <main className="birthday-game birthday-game-shell">
+    {!showEntry && !started ? <section className="secret-cover" aria-label="Portada THE SECRET GAME">
+      <div className="secret-cover-art" role="img" aria-label="THE SECRET GAME, edición cumpleaños">
+        <div className="secret-cover-unavailable">
+          <span>THE</span><strong>SECRET<br/>GAME</strong><em>EDICIÓN CUMPLEAÑOS</em>
+          <button type="button" onClick={()=>setShowEntry(true)}>▶ JUGAR</button>
+          <small>Crípticos · Pistas · Puntos · Ranking</small>
+          <b>¿Te copás con el cumple?</b><small>Ayudame a llenar el barril de 20 litros</small>
+          <strong className="secret-cover-alias">distri.sumando2</strong>
+        </div>
       </div>
-      <div className="birthday-seal"><span>THE</span><b>秘密</b><span>GAME</span></div>
-    </section>
-
-    <section className="birthday-donation"><div><span className="birthday-kicker">MISIÓN SECUNDARIA 😂</span><h2>¿Me ayudás a llenar el barril?</h2><p>Estoy juntando para un barril de cerveza de 20 litros. Si te copás con el cumple, cualquier aporte suma.</p></div><button type="button" onClick={()=>{navigator.clipboard?.writeText("distri.sumando2")}}>COPIAR ALIAS <b>distri.sumando2</b></button><span className="birthday-keg" aria-hidden="true">🍺</span></section>
-
-    <div className="birthday-guide-toggle-wrap"><button className="birthday-guide-toggle" onClick={()=>setShowGuide(!showGuide)}><BookOpen size={18}/>{showGuide?'Ocultar guía':'¿No sabés cómo jugar? Aprendé acá'}<span>{showGuide?'−':'+'}</span></button></div>
-    {showGuide&&<HowToPlay/>}
-
-    {!started ? <section className="birthday-entry" id="entrada">
-      <div className="birthday-entry-card">
-        <div className="birthday-card-icon"><PartyPopper size={22}/></div>
-        <div className="birthday-kicker">ANTES DE COMENZAR</div>
-        <h2>¿Quién está jugando?</h2>
-        <p>Escribí tu nombre para entrar a la experiencia.</p>
-        <form onSubmit={enterGame}>
-          <label htmlFor="player-name">Tu nombre</label>
-          <input id="player-name" value={player} onChange={e=>setPlayer(e.target.value)} placeholder="Ingresá tu nombre..." maxLength={32} required />
-          <button className="birthday-primary" type="submit" disabled={registering}>{registering ? 'Registrando...' : 'Comenzar aventura'} <ArrowRight size={17}/></button>
-          {registrationError && <p className="birthday-registration-error">{registrationError}</p>}
-        </form>
-        <small>Vas a recorrer los desafíos en orden.</small>
+    </section> : null}
+    {showEntry && !started ? <div className="secret-entry-screen">
+      <button className="secret-entry-back" type="button" onClick={()=>setShowEntry(false)}>← Volver a la portada</button>
+      <section className="birthday-entry" id="entrada">
+        <div className="birthday-entry-card">
+          <div className="birthday-card-icon"><PartyPopper size={22}/></div>
+          <div className="birthday-kicker">ANTES DE COMENZAR</div>
+          <h2>¿Quién está jugando?</h2>
+          <p>Escribí tu nombre para entrar a la experiencia.</p>
+          <form onSubmit={enterGame}>
+            <label htmlFor="player-name">Tu nombre</label>
+            <input id="player-name" value={player} onChange={e=>setPlayer(e.target.value)} placeholder="Ingresá tu nombre..." maxLength={32} required />
+            <button className="birthday-primary" type="submit" disabled={registering}>{registering ? 'Registrando...' : 'Comenzar aventura'} <ArrowRight size={17}/></button>
+            {registrationError && <p className="birthday-registration-error">{registrationError}</p>}
+          </form>
+          <small>Vas a recorrer los desafíos en orden.</small>
+        </div>
+      </section>
+    </div> : null}
+    {started ? <>
+      <header className="birthday-nav">
+        <button type="button" className="birthday-back" onClick={()=>setStarted(false)}>← Salir</button>
+        <div className="birthday-mark"><span>✳</span> THE SECRET GAME</div>
+        <div className="birthday-nav-right"><span className="live-dot"/> EXPERIENCIA PRIVADA</div>
+      </header>
+      <div className="birthday-game-tabs">
+        <button className={activeTab === 'today' ? 'active' : ''} onClick={() => setActiveTab('today')}>HOY</button>
+        <button className={activeTab === 'ranking' ? 'active' : ''} onClick={() => setActiveTab('ranking')}>RANKING</button>
       </div>
-    </section> : <section className="birthday-play">
+      {activeTab === 'ranking' ? <section className="birthday-ranking">
+        <div className="birthday-ranking-heading"><span className="birthday-kicker">LOS INVITADOS</span><h2>Tabla de posiciones</h2><p>El ranking de quienes participan, ordenado por puntos acumulados.</p></div>
+        {leaderboard.length ? <div className="birthday-ranking-list">{leaderboard.map((guest,index)=><div className={'birthday-ranking-row '+(index===0?'top-rank':'')} key={guest.id}><span className="birthday-rank-position">{String(index+1).padStart(2,'0')}</span><span className="birthday-rank-name">{guest.display_name}</span><b className="birthday-rank-points">{guest.points} <small>PTS</small></b></div>)}</div> : <div className="birthday-ranking-empty"><Trophy size={28}/><b>El ranking todavía está vacío</b><span>Cuando tus invitados se registren, aparecerán acá con sus puntos.</span></div>}
+        <button className="birthday-ranking-refresh" onClick={loadLeaderboard}>Actualizar ranking</button>
+      </section> : <section className="birthday-play">
       <div className="birthday-welcome"><div><span className="birthday-kicker">PARTICIPANTE</span><h2>¡Vamos, {player.trim()}!</h2><span className="birthday-total-score">TOTAL ACUMULADO: <b>{totalPoints} PTS</b></span></div><span className="birthday-progress-label">{completed.length} / 6 COMPLETADOS</span></div>
       <div className="birthday-progress"><span style={{width: (completed.length / 6 * 100) + '%'}}/></div>
       <div className="birthday-layout">
@@ -231,8 +228,7 @@ export default function CumplePage() {
       </div>
     </section>}
 
-    </>}
-
-    <footer className="birthday-footer"><span>MADE FOR A SPECIAL DAY</span><span>✳</span><span>THE SECRET GAME · 2026</span></footer>
+      </section>}
+    </> : null}
   </main>
 }
