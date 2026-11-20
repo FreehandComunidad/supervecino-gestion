@@ -194,11 +194,11 @@ export default function CumplePage() {
         {leaderboard.length ? <div className="birthday-ranking-list">{leaderboard.map((guest,index)=><div className={'birthday-ranking-row '+(index===0?'top-rank':'')} key={guest.id}><span className="birthday-rank-position">{String(index+1).padStart(2,'0')}</span><span className="birthday-rank-name">{guest.display_name}</span><b className="birthday-rank-points">{guest.points} <small>PTS</small></b></div>)}</div> : <div className="birthday-ranking-empty"><Trophy size={28}/><b>El ranking todavía está vacío</b><span>Cuando tus invitados se registren, aparecerán acá con sus puntos.</span></div>}
         <button className="birthday-ranking-refresh" onClick={loadLeaderboard}>Actualizar ranking</button>
       </section> : <section className="birthday-play">
-      <div className="birthday-welcome"><div><span className="birthday-kicker">PARTICIPANTE</span><h2>¡Vamos, {player.trim()}!</h2><span className="birthday-total-score">TOTAL ACUMULADO: <b>{totalPoints} PTS</b></span></div><span className="birthday-progress-label">{completed.length} / 6 COMPLETADOS</span></div>
-      <div className="birthday-progress"><span style={{width: (completed.length / 6 * 100) + '%'}}/></div>
+      <div className="birthday-welcome"><div><span className="birthday-kicker">PARTICIPANTE</span><h2>¡Vamos, {player.trim()}!</h2><span className="birthday-total-score">TOTAL ACUMULADO: <b>{totalPoints} PTS</b></span></div><span className="birthday-progress-label">{completed.length} / {stages.length} COMPLETADOS</span></div>
+      <div className="birthday-progress"><span style={{width: (completed.length / stages.length * 100) + '%'}}/></div>
       <div className="birthday-layout birthday-layout-direct">
         <article className="birthday-challenge">
-          <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
+          <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / {String(stages.length).padStart(2,'0')}</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
           {stage.answer ? <>
             <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Oreja|revuelta|la noche sin dormir|Jacinto|esconde|lo que sostiene el pantalón|Lo que hornea el panadero|una época|guarda las migas en la mesa|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
