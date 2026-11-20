@@ -258,3 +258,11 @@
 .secret-entry-screen .birthday-entry{width:100%;max-width:540px}
 .secret-entry-screen .birthday-entry-card{background:#fff;border-radius:22px;padding:30px}
 @media(max-width:600px){.secret-cover-art{padding:10px}.secret-cover-unavailable{min-height:96svh;border-radius:22px;padding:24px 16px}.secret-entry-back{top:10px;left:10px}}
+
+/* Exact artwork cover: preserve the supplied image and make only its JUGAR button interactive */
+.secret-cover{min-height:100svh;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;background:#10051f}
+.secret-cover-image-wrap{position:relative;width:min(100vw,calc(100svh * 0.914));aspect-ratio:1199/1312;max-height:100svh;flex:none}
+.secret-cover-image{display:block;width:100%;height:100%;object-fit:contain}
+.secret-cover-play-hotspot{position:absolute;left:26.8%;top:54.7%;width:43.8%;height:10.1%;border:0;border-radius:999px;background:transparent;cursor:pointer;touch-action:manipulation}
+.secret-cover-play-hotspot:focus-visible{outline:4px solid #fff;outline-offset:4px;box-shadow:0 0 0 7px #ffbd27}
+@media(min-width:700px){.secret-cover{padding:12px}.secret-cover-image-wrap{width:min(calc(100vw - 24px),calc(100svh * 0.914));}}
