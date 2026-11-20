@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { ArrowLeft, ArrowRight, LockKeyhole, Sparkles, Trophy, PartyPopper, KeyRound } from 'lucide-react'
+import { ArrowLeft, ArrowRight, LockKeyhole, Sparkles, Trophy, PartyPopper, KeyRound, BookOpen, Lightbulb } from 'lucide-react'
 
 const stages = [
   { number: 1, title: 'Primer enigma', level: 'INICIO', description: 'El primer desafío abre el juego.' },
@@ -12,6 +12,36 @@ const stages = [
   { number: 6, title: 'El gran final', level: 'DESAFÍO FINAL', description: 'La respuesta final guarda una sorpresa.' },
 ]
 
+const mechanisms = [
+  { title: 'Anagramas', description: 'Las letras de una palabra o grupo de palabras se reordenan para formar la solución.', indicators: 'revuelto · mezclado · desordenado · confuso · agitado · hecho un lío' },
+  { title: 'Palabras ocultas', description: 'La solución aparece como una secuencia continua de letras dentro de otra palabra o frase presente en la pista.', indicators: 'oculto en · escondido en · dentro de · parte de · entre' },
+  { title: 'Bifrontes', description: 'La solución se obtiene leyendo una palabra o secuencia de letras al revés.', indicators: 'al revés · vuelto · de espaldas · invertido · reflejado' },
+  { title: 'Homófonos', description: 'La solución es una palabra que suena igual o muy similar a otra mencionada en la pista.', indicators: 'se oye · suena · al oído · en voz alta' },
+  { title: 'Sinónimos', description: 'La solución se obtiene sustituyendo una palabra por otra de significado equivalente.' },
+]
+
+function HowToPlay() {
+  return <section className="birthday-guide" id="como-jugar">
+    <div className="birthday-guide-heading"><BookOpen size={20}/><div><span className="birthday-kicker">GUÍA PARA PRINCIPIANTES</span><h2>¿Cómo se juega?</h2></div></div>
+    <p className="birthday-guide-intro">No hace falta que hayas resuelto un críptico antes. Leé esta guía y vas a tener las herramientas para empezar.</p>
+    <div className="birthday-guide-callout"><b>La clave está en entender dos partes</b><p>Las pistas crípticas tienen una <strong>definición directa</strong> de la respuesta y un <strong>mecanismo</strong> que te permite construirla. La frase completa está diseñada para despistarte: suena como una frase cotidiana, pero puede esconder un juego de palabras.</p></div>
+    <h3>Anatomía de una pista</h3>
+    <div className="birthday-guide-parts">
+      <div><span className="guide-tag definition">DEFINICIÓN</span><p>Descripción directa de la solución. Suele estar al principio o al final de la frase.</p></div>
+      <div><span className="guide-tag mechanism">MECANISMO</span><p>El juego de palabras que te permite construir la respuesta.</p></div>
+      <div><span className="guide-tag indicator">INDICADOR</span><p>Palabra que señala qué tipo de mecanismo hay que aplicar.</p></div>
+    </div>
+    <p className="birthday-guide-note">La superficie es cómo suena la pista entera. Parece una frase cotidiana que no tiene nada que ver con la solución. ¡No te quedes solamente con la lectura literal!</p>
+    <h3>Tipos de mecanismo</h3>
+    <div className="birthday-mechanisms">{mechanisms.map(item=><article key={item.title}><h4>{item.title}</h4><p>{item.description}</p>{item.indicators&&<><span className="birthday-guide-subtitle">INDICADORES TÍPICOS</span><div className="birthday-indicators">{item.indicators.split(' · ').map(word=><span key={word}>{word}</span>)}</div></>}</article>)}</div>
+    <h3>Intentos y puntos</h3>
+    <div className="birthday-guide-callout"><ul><li>Tenés <strong>5 intentos</strong> para resolver cada desafío.</li><li>Si acertás en el primer intento, sumás <strong>100 puntos</strong>.</li><li>Cada intento adicional resta 10 puntos, hasta un mínimo de <strong>60 puntos</strong>.</li><li>Las pistas de ayuda descuentan <strong>10 puntos cada una</strong>.</li></ul></div>
+    <h3>Tipos de ayuda</h3>
+    <p className="birthday-guide-intro">Durante el juego pueden aparecer pistas de definición, indicador, material y letra. En la modalidad de referencia, una cuenta permite usar hasta tres pistas de cada tipo por semana; cada pista utilizada resta 10 puntos. La modalidad Críptico Club no tiene ese límite.</p>
+    <div className="birthday-guide-tip"><Lightbulb size={18}/><p><b>Consejo:</b> primero buscá qué parte de la frase podría definir la respuesta. Después identificá el indicador y probá el mecanismo que te está sugiriendo.</p></div>
+  </section>
+}
+
 export default function CumplePage() {
   const [started, setStarted] = useState(false)
   const [player, setPlayer] = useState('')
@@ -19,6 +49,7 @@ export default function CumplePage() {
   const [answer, setAnswer] = useState('')
   const [notice, setNotice] = useState('')
   const [completed, setCompleted] = useState<number[]>([])
+  const [showGuide, setShowGuide] = useState(false)
 
   function enterGame(e: React.FormEvent) {
     e.preventDefault()
@@ -50,6 +81,9 @@ export default function CumplePage() {
       </div>
       <div className="birthday-seal"><span>THE</span><b>秘密</b><span>GAME</span></div>
     </section>
+
+    <div className="birthday-guide-toggle-wrap"><button className="birthday-guide-toggle" onClick={()=>setShowGuide(!showGuide)}><BookOpen size={18}/>{showGuide?'Ocultar guía':'¿No sabés cómo jugar? Aprendé acá'}<span>{showGuide?'−':'+'}</span></button></div>
+    {showGuide&&<HowToPlay/>}
 
     {!started ? <section className="birthday-entry">
       <div className="birthday-entry-card">
