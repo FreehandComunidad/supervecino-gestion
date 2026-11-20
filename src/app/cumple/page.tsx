@@ -228,7 +228,6 @@ export default function CumplePage() {
       </div>
     </section>}
 
-      </section>}
     </> : null}
   </main>
 }
