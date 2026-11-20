@@ -61,9 +61,10 @@ export default function CumplePage() {
   const [leaderboard, setLeaderboard] = useState<{id:string;display_name:string;points:number}[]>([])
   const [registering, setRegistering] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
-  const [points, setPoints] = useState(100)
-  const [attempts, setAttempts] = useState(0)
-  const [usedHints, setUsedHints] = useState<string[]>([])
+  const [totalPoints, setTotalPoints] = useState(0)
+  const [pointsByStage, setPointsByStage] = useState<Record<number, number>>({})
+  const [attemptsByStage, setAttemptsByStage] = useState<Record<number, number>>({})
+  const [isAdvancing, setIsAdvancing] = useState(false)
   const [revealedLetters, setRevealedLetters] = useState<Record<number, number>>({})
   const [visibleHints, setVisibleHints] = useState<Record<number, string[]>>({})
   const [hintsByStage, setHintsByStage] = useState<Record<number, string[]>>({})
@@ -102,7 +103,7 @@ export default function CumplePage() {
     const current = hintsByStage[activeStage] || []
     if (current.includes(type) || completed.includes(activeStage)) return
     setHintsByStage(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
-    setPoints(previous => Math.max(0, previous - 10))
+    setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
     if (type === 'letter') setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answer.length, (previous[activeStage] || 0) + 1) }))
     else setVisibleHints(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
   }
@@ -116,11 +117,25 @@ export default function CumplePage() {
       .replace(/[^a-z]/g, '')
       .toLowerCase()
     if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
-      setCompleted(previous => previous.includes(activeStage) ? previous : [...previous, activeStage])
+      const earned = pointsByStage[activeStage] ?? 100
+      setCompleted(previous => {
+        if (previous.includes(activeStage)) return previous
+        setTotalPoints(total => total + earned)
+        return [...previous, activeStage]
+      })
       setNotice('¡Eso es! Encontraste la respuesta.')
+      if (activeStage < stages.length) {
+        setIsAdvancing(true)
+        window.setTimeout(() => {
+          setActiveStage(current => current === activeStage ? activeStage + 1 : current)
+          setAnswer('')
+          setNotice('')
+          setIsAdvancing(false)
+        }, 1400)
+      }
     } else {
-      setAttempts(previous => previous + 1)
-      setPoints(previous => Math.max(0, previous - 10))
+      setAttemptsByStage(previous => ({ ...previous, [activeStage]: (previous[activeStage] || 0) + 1 }))
+      setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
       setNotice('Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
     }
   }
@@ -173,12 +188,12 @@ export default function CumplePage() {
         <small>Vas a recorrer los desafíos en orden.</small>
       </div>
     </section> : <section className="birthday-play">
-      <div className="birthday-welcome"><div><span className="birthday-kicker">PARTICIPANTE</span><h2>¡Vamos, {player.trim()}!</h2></div><span className="birthday-progress-label">{completed.length} / 6 COMPLETADOS</span></div>
+      <div className="birthday-welcome"><div><span className="birthday-kicker">PARTICIPANTE</span><h2>¡Vamos, {player.trim()}!</h2><span className="birthday-total-score">TOTAL ACUMULADO: <b>{totalPoints} PTS</b></span></div><span className="birthday-progress-label">{completed.length} / 6 COMPLETADOS</span></div>
       <div className="birthday-progress"><span style={{width: (completed.length / 6 * 100) + '%'}}/></div>
       <div className="birthday-layout">
         <aside className="birthday-levels">
           <div className="birthday-levels-head"><span className="birthday-kicker">TU RECORRIDO</span><b>Los seis desafíos</b></div>
-          {stages.map(item=><button key={item.number} className={'birthday-level '+(activeStage===item.number?'selected ':'')+(completed.includes(item.number)?'done':'')} onClick={()=>{setActiveStage(item.number);setAnswer('');setNotice('');setAttempts(0)}}>
+          {stages.map(item=><button key={item.number} className={'birthday-level '+(activeStage===item.number?'selected ':'')+(completed.includes(item.number)?'done':'')} onClick={()=>{setActiveStage(item.number);setAnswer('');setNotice('');setIsAdvancing(false)}}>
             <span className="birthday-level-number">{completed.includes(item.number)?'✓':String(item.number).padStart(2,'0')}</span>
             <span className="birthday-level-copy"><b>{item.title}</b><small>{item.level}</small></span>
             {item.number===6&&!completed.includes(6)&&<LockKeyhole size={15}/>}
@@ -186,7 +201,7 @@ export default function CumplePage() {
         </aside>
         <article className="birthday-challenge">
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
-          <div className="birthday-scorebar"><span>PUNTAJE</span><strong>{points} PTS</strong><span>INTENTOS: {attempts}/5</span></div>
+          <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
           {stage.answer ? <>
             <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|2892|principios|encontré|por fin|el lugar indicado|Pacífico|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
@@ -205,7 +220,7 @@ export default function CumplePage() {
               </form>
             </> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! Seguí con el próximo desafío.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
-          {notice&&<p className="birthday-notice">{notice}</p>}
+          {notice&&<p className="birthday-notice">{notice}{isAdvancing ? ' Cargando el siguiente desafío…' : ''}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
         </article>
       </div>
