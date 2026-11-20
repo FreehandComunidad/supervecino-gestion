@@ -29,7 +29,8 @@ const stages = [
   { number: 8, title: 'Abriga hasta las rodillas', level: 'NIVEL 08', clue: 'Donde viaja la carta junto a la totalidad abriga hasta las rodillas.', answer: 'SOBRETODO',
     hints: { definition: 'La definición es «abriga hasta las rodillas».', indicator: '«Junto a» indica que unas dos partes para formar una sola palabra.', material: 'SOBRE es donde viaja la carta y TODO significa la totalidad. SOBRE + TODO = SOBRETODO.' },
     parts: { material: ['Donde viaja la carta', 'la totalidad'], indicator: ['junto a'], definition: ['abriga hasta las rodillas'] } },
-  { number: 9, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',\n    hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },\n    parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
+  { number: 9, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',
+    hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },\n    parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
 ]
 
 const mechanisms = [
