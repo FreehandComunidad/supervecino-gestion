@@ -11,9 +11,9 @@ const stages = [
   { number: 2, title: 'El lugar indicado', level: 'NIVEL 02', clue: 'A principios de 2892, encontré por fin el lugar indicado.', answer: 'DONDE',
     hints: { definition: 'La definición es «el lugar indicado».', indicator: '«A principios» y «por fin» señalan que tomes letras iniciales y finales.', material: 'Los números se leen en palabras: dos, ocho, nueve, dos. Sumá la última letra de encontré.' },
     parts: { material: ['2892', 'encontré'], indicator: ['principios', 'por fin'], definition: ['el lugar indicado'] } },
-  { number: 3, title: 'El dios más humano', level: 'NIVEL 03', clue: 'Pacífico la cabeza del agua y una masa redonda frita. Es el dios más humano de todos.', answer: 'MARADONA',
-    hints: { definition: 'La definición es «el dios más humano de todos».', indicator: '«La cabeza» pide tomar la primera letra de la palabra siguiente.', material: 'Pacífico aporta MAR; agua aporta A; una masa redonda frita es una DONA.' },
-    parts: { material: ['Pacífico', 'agua', 'masa redonda frita'], indicator: ['la cabeza'], definition: ['Es el dios más humano de todos'] } },
+  { number: 3, title: 'El dios más humano', level: 'NIVEL 03', clue: 'Océano la cabeza del agua y una masa redonda frita. Es el dios más humano de todos.', answer: 'MARADONA',
+    hints: { definition: 'La definición es «el dios más humano de todos».', indicator: '«La cabeza» pide tomar la primera letra de la palabra siguiente.', material: 'Océano aporta MAR; agua aporta A; una masa redonda frita es una DONA.' },
+    parts: { material: ['Océano', 'agua', 'masa redonda frita'], indicator: ['la cabeza'], definition: ['Es el dios más humano de todos'] } },
   { number: 4, title: 'Cuarto desafío', level: 'NIVEL 04', clue: 'Un nuevo enigma te espera.', answer: '' },
   { number: 5, title: 'Casi al final', level: 'NIVEL 05', clue: 'Un último enigma antes del gran cierre.', answer: '' },
   { number: 6, title: 'El gran final', level: 'DESAFÍO FINAL', clue: 'La respuesta final guarda una sorpresa.', answer: '' },
@@ -190,7 +190,7 @@ export default function CumplePage() {
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / 06</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
           {stage.answer ? <>
-            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|2892|principios|encontré|por fin|el lugar indicado|Pacífico|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
+            <div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
               const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
               return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
