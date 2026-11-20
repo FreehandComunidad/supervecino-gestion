@@ -130,3 +130,19 @@
 .birthday-registration-error{color:#b94b40;font-size:11px;margin:5px 0 0}
 .birthday-primary:disabled{opacity:.6;cursor:wait}
 @media(max-width:520px){.birthday-ranking{padding:38px 15px 70px}.birthday-ranking-row{padding:15px 13px}.birthday-game-tabs button{padding:16px 8px}}
+
+/* Playable cryptic clue: CAMA */
+.birthday-cryptic-clue{font:400 clamp(25px,4vw,38px)/1.45 Georgia,serif;color:#eee9dc;margin:26px 0 22px}
+.birthday-cryptic-clue .cryptic-material{ text-decoration: underline dotted #a5a39a;text-decoration-thickness:2px;text-underline-offset:7px}
+.birthday-cryptic-clue .cryptic-indicator{text-decoration:underline dashed #d9b978;text-decoration-thickness:2px;text-underline-offset:7px}
+.birthday-cryptic-clue .cryptic-definition{text-decoration:underline solid #8eacd4;text-decoration-thickness:3px;text-underline-offset:7px}
+.birthday-cryptic-legend{display:grid;gap:10px;margin:4px 0 28px;color:#aeb9ad;font-size:12px}
+.birthday-cryptic-legend span{display:flex;align-items:center;gap:10px}
+.birthday-cryptic-legend i{display:inline-block;width:46px;border-top:3px solid}
+.birthday-cryptic-legend .legend-definition{border-color:#8eacd4}
+.birthday-cryptic-legend .legend-indicator{border-color:#d9b978;border-top-style:dashed}
+.birthday-cryptic-legend .legend-material{border-color:#a5a39a;border-top-style:dotted}
+.birthday-solution{display:grid;gap:10px;margin-top:20px;padding:18px;background:#202f27;border:1px solid #ffffff20;color:#aeb9ad}
+.birthday-solution b{font-size:9px;letter-spacing:2px;color:#d9b978}
+.birthday-solution strong{font:700 21px/1.4 ui-monospace,monospace;color:#e9eee7}
+.birthday-solution span{font:14px ui-monospace,monospace;color:#aeb9ad}
