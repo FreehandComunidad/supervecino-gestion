@@ -66,7 +66,7 @@ export default function CumplePage() {
     if (activeTab === 'ranking') loadLeaderboard()
   }, [activeTab])
 
-  function enterGame(e: React.FormEvent) {
+  async function enterGame(e: React.FormEvent) {
     e.preventDefault()
     if (!player.trim()) return
     setRegistering(true)
