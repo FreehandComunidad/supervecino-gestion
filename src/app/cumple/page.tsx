@@ -110,9 +110,12 @@ export default function CumplePage() {
   function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
     if (!stage.answer || completed.includes(activeStage)) return
-    const normalized = answer.normalize('NFD').replace(/\\p{M}/gu, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
-    const expected = stage.answer.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-zA-ZñÑ]/g, '').toLocaleUpperCase('es-AR')
-    if (normalized === expected) {
+    const normalizeAnswer = (value: string) => value
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^a-zA-ZñÑ]/g, '')
+      .toUpperCase()
+    if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
       setCompleted(previous => previous.includes(activeStage) ? previous : [...previous, activeStage])
       setNotice('¡Eso es! Encontraste la respuesta.')
     } else {
