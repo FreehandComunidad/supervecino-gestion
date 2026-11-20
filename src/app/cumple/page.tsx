@@ -145,14 +145,9 @@ export default function CumplePage() {
 
   return <main className="birthday-game birthday-game-shell">
     {!showEntry && !started ? <section className="secret-cover" aria-label="Portada THE SECRET GAME">
-      <div className="secret-cover-art" role="img" aria-label="THE SECRET GAME, edición cumpleaños">
-        <div className="secret-cover-unavailable">
-          <span>THE</span><strong>SECRET<br/>GAME</strong><em>EDICIÓN CUMPLEAÑOS</em>
-          <button type="button" onClick={()=>setShowEntry(true)}>▶ JUGAR</button>
-          <small>Crípticos · Pistas · Puntos · Ranking</small>
-          <b>¿Te copás con el cumple?</b><small>Ayudame a llenar el barril de 20 litros</small>
-          <strong className="secret-cover-alias">distri.sumando2</strong>
-        </div>
+      <div className="secret-cover-image-wrap">
+        <img className="secret-cover-image" src="/secret-game-cover.webp" alt="THE SECRET GAME — edición cumpleaños" />
+        <button className="secret-cover-play-hotspot" type="button" aria-label="Jugar THE SECRET GAME" onClick={()=>setShowEntry(true)} />
       </div>
     </section> : null}
     {showEntry && !started ? <div className="secret-entry-screen">
