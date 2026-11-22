@@ -181,7 +181,7 @@ export default function CumplePage() {
     }
   }
 
-  function checkAnswer(e: React.FormEvent) {
+  async function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
     if (!stage.answer || completed.includes(activeStage) || (attemptsByStage[activeStage] || 0) >= 5 || isAdvancing) return
     const normalizeAnswer = (value: string) => value
@@ -192,10 +192,23 @@ export default function CumplePage() {
     if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
       const earned = pointsByStage[activeStage] ?? 100
       if (!completed.includes(activeStage)) {
-        setCompleted(previous => [...previous, activeStage])
-        setTotalPoints(total => total + earned)
+        try {
+          const guestId = localStorage.getItem('cryptic_guest_id')
+          if (!guestId) throw new Error('No encontramos tu registro de participante. Salí y volvé a ingresar con tu nombre.')
+          const supabase = createClient()
+          const { error } = await supabase.rpc('add_cryptic_points', {
+            p_guest_id: guestId,
+            p_points: earned,
+          })
+          if (error) throw error
+          setCompleted(previous => [...previous, activeStage])
+          setTotalPoints(total => total + earned)
+        } catch (error) {
+          setNotice(error instanceof Error ? `No se pudieron guardar tus puntos: ${error.message}` : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
+          return
+        }
       }
-      setNotice('¡Eso es! Encontraste la respuesta.')
+      setNotice('¡Eso es! Encontraste la respuesta. Tus puntos quedaron guardados en el ranking.')
       if (activeStage < stages.length) {
         setIsAdvancing(true)
         window.setTimeout(() => {
