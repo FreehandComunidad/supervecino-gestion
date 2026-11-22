@@ -184,31 +184,33 @@ export default function CumplePage() {
   async function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
     if (!stage.answer || completed.includes(activeStage) || (attemptsByStage[activeStage] || 0) >= 5 || isAdvancing) return
+
     const normalizeAnswer = (value: string) => value
       .normalize('NFD')
       .replace(/\p{M}/gu, '')
       .toLowerCase()
       .replace(/[^a-z]/g, '')
+
     if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
       const earned = pointsByStage[activeStage] ?? 100
-      if (!completed.includes(activeStage)) {
-        try {
-          const guestId = localStorage.getItem('cryptic_guest_id')
-          if (!guestId) throw new Error('No encontramos tu registro de participante. Salí y volvé a ingresar con tu nombre.')
-          const supabase = createClient()
-          const { error } = await supabase.rpc('add_cryptic_points', {
-            p_guest_id: guestId,
-            p_points: earned,
-          })
-          if (error) throw error
-          setCompleted(previous => [...previous, activeStage])
-          setTotalPoints(total => total + earned)
-        } catch (error) {
-          setNotice(error instanceof Error ? `No se pudieron guardar tus puntos: ${error.message}` : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
-          return
-        }
+      try {
+        const guestId = localStorage.getItem('cryptic_guest_id')
+        if (!guestId) throw new Error('No encontramos tu registro de participante. Salí y volvé a ingresar con tu nombre.')
+        const supabase = createClient()
+        const { error } = await supabase.rpc('add_cryptic_points', {
+          p_guest_id: guestId,
+          p_points: earned,
+        })
+        if (error) throw error
+      } catch (error) {
+        setNotice(error instanceof Error ? `No se pudieron guardar tus puntos: ${error.message}` : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
+        return
       }
+
+      setCompleted(previous => [...previous, activeStage])
+      setTotalPoints(total => total + earned)
       setNotice('¡Eso es! Encontraste la respuesta. Tus puntos quedaron guardados en el ranking.')
+
       if (activeStage < stages.length) {
         setIsAdvancing(true)
         window.setTimeout(() => {
@@ -217,13 +219,12 @@ export default function CumplePage() {
           setNotice('')
           setIsAdvancing(false)
         }, 4000)
-        } else {
-          setIsAdvancing(true)
-          window.setTimeout(() => {
-            setActiveTab('ranking')
-            setIsAdvancing(false)
-          }, 4000)
-        }
+      } else {
+        setIsAdvancing(true)
+        window.setTimeout(() => {
+          setActiveTab('ranking')
+          setIsAdvancing(false)
+        }, 4000)
       }
     } else {
       const nextAttempts = (attemptsByStage[activeStage] || 0) + 1
@@ -307,7 +308,7 @@ export default function CumplePage() {
               {(['definition','indicator','material'] as const).filter(type=>(visibleHints[activeStage] || []).includes(type)).map(type=><p className="birthday-hint-text" key={type}>{stage.hints[type]}</p>)}
               {(revealedLetters[activeStage] || 0)>0 && <p className="birthday-hint-text">Letras reveladas: {stage.answer.slice(0,revealedLetters[activeStage]).split('').join(' · ')}</p>}
               <form className="birthday-answer" onSubmit={checkAnswer}>
-                <label htmlFor="game-answer">Tu respuesta</label>
+                <label htmlFor="game-answer">Escribí tu respuesta (acepta mayúsculas y minúsculas)</label>
                 <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={20}/><button type="submit"><ArrowRight size={17}/></button></div>
               </form>
               </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Podés rendirte para continuar.</span></div>}
