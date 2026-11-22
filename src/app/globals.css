@@ -278,3 +278,8 @@
 .birthday-layout-direct{display:block!important;width:100%}
 .birthday-layout-direct .birthday-levels{display:none!important}
 .birthday-layout-direct .birthday-challenge{width:100%;max-width:none;margin:0}
+
+
+/* Visible counter for the number of letters in every cryptic */
+.birthday-cryptic-length{display:inline-flex!important;align-items:center;justify-content:center;min-height:38px;margin:18px 0 0;padding:8px 16px;border:2px solid #ffd477;border-radius:999px;background:linear-gradient(120deg,#56305e,#382448);color:#ffe3a1!important;font:800 13px/1 'DM Sans',Arial,sans-serif;letter-spacing:2px;text-shadow:0 0 12px #ffcf7066;box-shadow:0 4px 18px #08051655;visibility:visible!important;opacity:1!important;position:relative;z-index:2}
+.birthday-cryptic-length::before{content:'✦';margin-right:8px;color:#ffcf70}
