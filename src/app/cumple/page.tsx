@@ -153,8 +153,11 @@ export default function CumplePage() {
     if (current.includes(type) || completed.includes(activeStage)) return
     setHintsByStage(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
     setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
-    if (type === 'letter') setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answer.length, (previous[activeStage] || 0) + 1) }))
-    else setVisibleHints(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
+    if (type === 'letter') {
+      setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answer.length, (previous[activeStage] || 0) + 1) }))
+    } else if (type !== 'material') {
+      setVisibleHints(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
+    }
   }
 
   function surrenderChallenge() {
