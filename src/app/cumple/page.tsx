@@ -122,7 +122,10 @@ export default function CumplePage() {
       setLeaderboard([])
       setAdminMessage(`Ranking reiniciado. Se eliminaron ${data ?? 0} participantes.`)
     } catch (error) {
-      setAdminMessage(error instanceof Error ? error.message : 'No se pudo reiniciar el ranking.')
+      const detail = typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message: unknown }).message)
+        : error instanceof Error ? error.message : 'Error desconocido'
+      setAdminMessage(`No se pudo reiniciar el ranking: ${detail}`)
     } finally {
       setResettingRanking(false)
     }
