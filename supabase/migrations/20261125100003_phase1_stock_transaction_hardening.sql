@@ -15,9 +15,9 @@ as $$
 declare
   v_user uuid := (select auth.uid());
   v_stock numeric;
+  v_role text := private.get_current_app_role();
 begin
-  if v_user is null
-     or private.get_current_app_role() not in ('owner', 'manager') then
+  if v_user is null or v_role is null or v_role not in ('owner', 'manager') then
     raise exception 'No tenés permisos para ajustar stock.';
   end if;
 
@@ -65,9 +65,9 @@ declare
   v_item record;
   v_status text;
   v_user uuid := (select auth.uid());
+  v_role text := private.get_current_app_role();
 begin
-  if v_user is null
-     or private.get_current_app_role() not in ('owner', 'manager') then
+  if v_user is null or v_role is null or v_role not in ('owner', 'manager') then
     raise exception 'No tenés permisos para recibir compras.';
   end if;
 

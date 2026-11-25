@@ -205,10 +205,13 @@ language plpgsql
 stable
 security definer
 set search_path = ''
-as $$
+as $
+declare
+  v_role text := private.get_current_app_role();
 begin
   if (select auth.uid()) is null
-     or private.get_current_app_role() not in ('owner', 'manager') then
+     or v_role is null
+     or v_role not in ('owner', 'manager') then
     raise exception 'No tenés permisos para consultar costos y rentabilidad.';
   end if;
 

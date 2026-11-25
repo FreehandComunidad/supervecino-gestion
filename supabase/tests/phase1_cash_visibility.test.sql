@@ -1,13 +1,14 @@
 begin;
 
-select plan(16);
+select plan(17);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
  ('00000000-0000-4000-8000-000000000101','authenticated','authenticated','ci-cash-manager@supervecino.local','',now(),now(),now()),
  ('00000000-0000-4000-8000-000000000102','authenticated','authenticated','ci-cash-one@supervecino.local','',now(),now(),now()),
  ('00000000-0000-4000-8000-000000000103','authenticated','authenticated','ci-cash-two@supervecino.local','',now(),now(),now()),
- ('00000000-0000-4000-8000-000000000104','authenticated','authenticated','ci-cash-owner@supervecino.local','',now(),now(),now())
+ ('00000000-0000-4000-8000-000000000104','authenticated','authenticated','ci-cash-owner@supervecino.local','',now(),now(),now()),
+ ('00000000-0000-4000-8000-000000000105','authenticated','authenticated','ci-cash-inactive@supervecino.local','',now(),now(),now())
 on conflict (id) do nothing;
 
 insert into public.profiles(id,full_name,role,active)
@@ -15,8 +16,14 @@ values
  ('00000000-0000-4000-8000-000000000101','CI Cash Manager','manager',true),
  ('00000000-0000-4000-8000-000000000102','CI Cashier One','cashier',true),
  ('00000000-0000-4000-8000-000000000103','CI Cashier Two','cashier',true),
- ('00000000-0000-4000-8000-000000000104','CI Cash Owner','owner',true)
+ ('00000000-0000-4000-8000-000000000104','CI Cash Owner','owner',true),
+ ('00000000-0000-4000-8000-000000000105','CI Cash Inactive','manager',false)
 on conflict (id) do update set role=excluded.role,active=true;
+
+select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000105',true);
+set local role authenticated;
+select throws_ok('select public.register_cash_movement(''in'',5,''inactive'')','P0001','Usuario sin perfil activo o sin permisos para operar caja.','inactive manager cannot record cash movements');
+reset role;
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000101',true);
 set local role authenticated;

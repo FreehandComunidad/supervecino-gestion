@@ -16,13 +16,13 @@ declare
   v_session_id uuid;
   v_movement_id uuid;
   v_description text := nullif(trim(p_description), '');
+  v_role text := private.get_current_app_role();
 begin
-  if v_user is null
-     or private.get_current_app_role() not in ('owner', 'manager', 'cashier') then
+  if v_user is null or v_role is null or v_role not in ('owner', 'manager', 'cashier') then
     raise exception 'Usuario sin perfil activo o sin permisos para operar caja.';
   end if;
 
-  if p_movement_type not in ('in', 'out') then
+  if p_movement_type is null or p_movement_type not in ('in', 'out') then
     raise exception 'El tipo de movimiento debe ser ingreso o egreso.';
   end if;
 
@@ -118,5 +118,65 @@ begin
   );
 end;
 $$;
+
+
+-- Pago a proveedor: el rol nulo/inactivo también debe ser denegado.
+create or replace function public.register_supplier_payment(
+  p_purchase_id uuid,
+  p_amount numeric,
+  p_payment_date date,
+  p_payment_method text,
+  p_reference text default null,
+  p_notes text default null
+) returns uuid
+language plpgsql
+security invoker
+set search_path = ''
+as $
+declare
+  v_purchase public.purchases%rowtype;
+  v_paid numeric;
+  v_id uuid;
+  v_user uuid := (select auth.uid());
+  v_role text := private.get_current_app_role();
+  v_method text := coalesce(nullif(trim(p_payment_method), ''), 'transfer');
+begin
+  if v_user is null or v_role is null or v_role not in ('owner', 'manager') then
+    raise exception 'No tenés permisos para registrar pagos a proveedores.';
+  end if;
+
+  if p_amount is null or p_amount <= 0 or p_amount::text in ('NaN', 'Infinity', '-Infinity') then
+    raise exception 'El importe debe ser mayor que cero y válido.';
+  end if;
+
+  select p.* into v_purchase
+  from public.purchases p
+  where p.id = p_purchase_id
+  for update;
+
+  if not found then raise exception 'No se encontró la factura.'; end if;
+  if v_purchase.status <> 'received' then raise exception 'Primero tenés que recibir la factura.'; end if;
+
+  select coalesce(sum(sp.amount), 0) into v_paid
+  from public.supplier_payments sp
+  where sp.purchase_id = p_purchase_id;
+
+  if p_amount > v_purchase.total - v_paid + 0.005 then
+    raise exception 'El pago supera el saldo pendiente.';
+  end if;
+
+  insert into public.supplier_payments(
+    purchase_id, payment_date, amount, payment_method, reference, notes, created_by
+  ) values (
+    p_purchase_id, coalesce(p_payment_date, current_date), p_amount, v_method,
+    nullif(trim(p_reference), ''), nullif(trim(p_notes), ''), v_user
+  ) returning id into v_id;
+
+  return v_id;
+end;
+$;
+
+revoke all on function public.register_supplier_payment(uuid, numeric, date, text, text, text) from public, anon;
+grant execute on function public.register_supplier_payment(uuid, numeric, date, text, text, text) to authenticated;
 
 commit;
