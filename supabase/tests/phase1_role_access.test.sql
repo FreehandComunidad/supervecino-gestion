@@ -1,6 +1,6 @@
 begin;
 
-select plan(8);
+select plan(10);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -20,6 +20,10 @@ insert into public.sales (cashier_id, subtotal, total)
 values
   ('00000000-0000-4000-8000-000000000091', 100, 100),
   ('00000000-0000-4000-8000-000000000092', 200, 200);
+
+insert into public.app_settings (key, value)
+values ('ci-test-setting', '{"enabled":true}'::jsonb)
+on conflict (key) do update set value = excluded.value;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000093', true);
 set local role authenticated;
@@ -47,6 +51,11 @@ select is(
   1,
   'cashier can see the shared open cash session'
 );
+select is(
+  (select count(*)::integer from public.app_settings where key = 'ci-test-setting'),
+  0,
+  'cashier cannot read internal app settings'
+);
 select throws_ok(
   $$select count(*) from public.get_products_management()$$,
   'P0001',
@@ -68,8 +77,13 @@ select is(
   'manager can see all staff profiles'
 );
 select lives_ok(
-  $$select count(*) from public.get_products_management()$$,
+  $select count(*) from public.get_products_management()$,
   'manager can access the protected product management RPC'
+);
+select is(
+  (select count(*)::integer from public.app_settings where key = 'ci-test-setting'),
+  1,
+  'manager can read internal app settings'
 );
 reset role;
 
