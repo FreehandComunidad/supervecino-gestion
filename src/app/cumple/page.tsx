@@ -5,31 +5,31 @@ import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, ArrowRight, LockKeyhole, Sparkles, Trophy, PartyPopper, KeyRound, BookOpen, Lightbulb } from 'lucide-react'
 
 const stages = [
-  { number: 1, title: 'Cámara que perdió RA', level: 'INICIO', clue: 'Cámara que perdió RA, vecino: ¿dónde duermo?', answerLength: 4, firstLetter: 'C',
+  { number: 1, title: 'Cámara que perdió RA', level: 'INICIO', clue: 'Cámara que perdió RA, vecino: ¿dónde duermo?', answer: 'CAMA',
     hints: { definition: 'La definición pregunta por el lugar donde descansás por la noche.', indicator: '«Perdió» indica que hay que quitar letras.', material: 'El material es CÁMARA: un dispositivo para tomar fotografías.' },
     parts: { material: ['Cámara', 'RA'], indicator: ['perdió'], definition: ['¿dónde duermo?'] } },
-  { number: 2, title: 'El lugar indicado', level: 'NIVEL 02', clue: 'A principios de 2892, encontré por fin el lugar indicado.', answerLength: 5, firstLetter: 'D',
+  { number: 2, title: 'El lugar indicado', level: 'NIVEL 02', clue: 'A principios de 2892, encontré por fin el lugar indicado.', answer: 'DONDE',
     hints: { definition: 'La definición es «el lugar indicado».', indicator: '«A principios» y «por fin» señalan que tomes letras iniciales y finales.', material: 'Los números se leen en palabras: dos, ocho, nueve, dos. Sumá la última letra de encontré.' },
     parts: { material: ['2892', 'encontré'], indicator: ['principios', 'por fin'], definition: ['el lugar indicado'] } },
-  { number: 3, title: 'El dios más humano', level: 'NIVEL 03', clue: 'Océano la cabeza del agua y una masa redonda frita. Es el dios más humano de todos.', answerLength: 8, firstLetter: 'M',
+  { number: 3, title: 'El dios más humano', level: 'NIVEL 03', clue: 'Océano la cabeza del agua y una masa redonda frita. Es el dios más humano de todos.', answer: 'MARADONA',
     hints: { definition: 'La definición es «el dios más humano de todos».', indicator: '«La cabeza» pide tomar la primera letra de la palabra siguiente.', material: 'Océano aporta MAR; agua aporta A; una masa redonda frita es una DONA.' },
     parts: { material: ['Océano', 'agua', 'masa redonda frita'], indicator: ['la cabeza'], definition: ['Es el dios más humano de todos'] } },
-  { number: 4, title: 'Alérgico a lo inmóvil', level: 'NIVEL 04', clue: 'Norte, Isla y el comienzo de Chocolate esconden a alguien alérgico a lo inmóvil.', answerLength: 5, firstLetter: 'N',
+  { number: 4, title: 'Alérgico a lo inmóvil', level: 'NIVEL 04', clue: 'Norte, Isla y el comienzo de Chocolate esconden a alguien alérgico a lo inmóvil.', answer: 'NICHO',
     hints: { definition: 'La definición es «alérgico a lo inmóvil».', indicator: '«El comienzo» indica que tomes la primera parte de la palabra que sigue.', material: 'Norte aporta N, Isla aporta I y Chocolate aporta CHO.' },
     parts: { material: ['Norte', 'Isla', 'Chocolate'], indicator: ['el comienzo'], definition: ['alérgico a lo inmóvil'] } },
-  { number: 5, title: 'La noche sin dormir', level: 'NIVEL 05', clue: 'Oreja revuelta delata la noche sin dormir.', answerLength: 5, firstLetter: 'O',
+  { number: 5, title: 'La noche sin dormir', level: 'NIVEL 05', clue: 'Oreja revuelta delata la noche sin dormir.', answer: 'OJERA',
     hints: { definition: 'La definición es «la marca que delata la noche sin dormir».', indicator: '«Revuelta» indica que hay que reordenar las letras.', material: 'El material es OREJA. Al reordenar sus letras se obtiene OJERA.' },
     parts: { material: ['Oreja'], indicator: ['revuelta'], definition: ['la noche sin dormir'] } },
-  { number: 6, title: 'Lo que sostiene el pantalón', level: 'NIVEL 06', clue: 'Jacinto esconde lo que sostiene el pantalón.', answerLength: 5, firstLetter: 'C',
+  { number: 6, title: 'Lo que sostiene el pantalón', level: 'NIVEL 06', clue: 'Jacinto esconde lo que sostiene el pantalón.', answer: 'CINTO',
     hints: { definition: 'La definición es «lo que sostiene el pantalón».', indicator: '«Esconde» indica que la respuesta está oculta dentro de otra palabra.', material: 'Buscá la secuencia continua CINTO dentro de JaCINTO.' },
     parts: { material: ['Jacinto'], indicator: ['esconde'], definition: ['lo que sostiene el pantalón'] } },
-  { number: 7, title: 'Las migas en la mesa', level: 'NIVEL 07', clue: 'Lo que hornea el panadero en una época guarda las migas en la mesa.', answerLength: 6, firstLetter: 'P',
+  { number: 7, title: 'Las migas en la mesa', level: 'NIVEL 07', clue: 'Lo que hornea el panadero en una época guarda las migas en la mesa.', answer: 'PANERA',
     hints: { definition: 'La definición es «lo que guarda las migas en la mesa».', indicator: 'La pista combina dos definiciones para formar una palabra.', material: 'PAN es lo que hornea el panadero y ERA significa una época. PAN + ERA = PANERA.' },
     parts: { material: ['Lo que hornea el panadero', 'una época'], indicator: ['en'], definition: ['guarda las migas en la mesa'] } },
-  { number: 8, title: 'Abriga hasta las rodillas', level: 'NIVEL 08', clue: 'Donde viaja la carta junto a la totalidad abriga hasta las rodillas.', answerLength: 9, firstLetter: 'S',
+  { number: 8, title: 'Abriga hasta las rodillas', level: 'NIVEL 08', clue: 'Donde viaja la carta junto a la totalidad abriga hasta las rodillas.', answer: 'SOBRETODO',
     hints: { definition: 'La definición es «abriga hasta las rodillas».', indicator: '«Junto a» indica que unas dos partes para formar una sola palabra.', material: 'SOBRE es donde viaja la carta y TODO significa la totalidad. SOBRE + TODO = SOBRETODO.' },
     parts: { material: ['Donde viaja la carta', 'la totalidad'], indicator: ['junto a'], definition: ['abriga hasta las rodillas'] } },
-  { number: 9, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answerLength: 6, firstLetter: 'E',
+  { number: 9, title: 'El amor está en el aire', level: 'DESAFÍO FINAL', clue: 'Entre Mil Ilusiones Late Siempre Ese nombre que hace sonreír al corazón. ¿Quién es?', answer: 'EMILSE',
     hints: { definition: 'La definición es «el nombre que hace sonreír al corazón».', indicator: '«Entre» indica que tomes las iniciales de las palabras que siguen.', material: 'Mil, Ilusiones, Late, Siempre y Ese aportan sus letras iniciales, junto con la E de Entre.' },
     parts: { material: ['Entre', 'Mil', 'Ilusiones', 'Late', 'Siempre', 'Ese'], indicator: ['Entre'], definition: ['nombre que hace sonreír al corazón'] } },
 ]
@@ -75,6 +75,7 @@ export default function CumplePage() {
   const [surrendered, setSurrendered] = useState<number[]>([])
   const [showGuide, setShowGuide] = useState(false)
   const [activeTab, setActiveTab] = useState<'today' | 'ranking' | 'admin'>('today')
+  const [adminPin, setAdminPin] = useState('')
   const [adminUnlocked, setAdminUnlocked] = useState(false)
   const [adminMessage, setAdminMessage] = useState('')
   const [resettingRanking, setResettingRanking] = useState(false)
@@ -101,42 +102,30 @@ export default function CumplePage() {
 
   async function unlockAdmin(e: React.FormEvent) {
     e.preventDefault()
-    const supabase = createClient()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData.user) {
+    if (adminPin !== '2211') {
       setAdminUnlocked(false)
-      setAdminMessage('Iniciá sesión en SÚPERVECINO GESTIÓN con la cuenta del propietario y volvé a intentar.')
-      return
-    }
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('role,active')
-      .eq('id', authData.user.id)
-      .maybeSingle()
-    if (error || !profile?.active || profile.role !== 'owner') {
-      setAdminUnlocked(false)
-      setAdminMessage('Esta acción está reservada al propietario activo.')
+      setAdminMessage('Código incorrecto.')
       return
     }
     setAdminUnlocked(true)
-    setAdminMessage('Acceso de propietario habilitado.')
+    setAdminMessage('Acceso de administrador habilitado.')
   }
 
   async function resetRanking() {
-    if (!window.confirm('¿Seguro que querés reiniciar los puntajes? Los participantes conservarán sus registros.')) return
+    if (!window.confirm('¿Seguro que querés reiniciar el ranking? Se eliminarán todos los participantes y sus puntajes.')) return
     setResettingRanking(true)
     setAdminMessage('')
     try {
       const supabase = createClient()
-      const { data, error } = await supabase.rpc('reset_cryptic_ranking')
+      const { data, error } = await supabase.rpc('reset_cryptic_ranking', { p_pin: adminPin })
       if (error) throw error
-      await loadLeaderboard()
-      setAdminMessage('Ranking reiniciado. Se restablecieron los puntos de ' + (data ?? 0) + ' participantes; los registros se conservaron.')
+      setLeaderboard([])
+      setAdminMessage(`Ranking reiniciado. Se eliminaron ${data ?? 0} participantes.`)
     } catch (error) {
       const detail = typeof error === 'object' && error !== null && 'message' in error
         ? String((error as { message: unknown }).message)
         : error instanceof Error ? error.message : 'Error desconocido'
-      setAdminMessage('No se pudo reiniciar el ranking: ' + detail)
+      setAdminMessage(`No se pudo reiniciar el ranking: ${detail}`)
     } finally {
       setResettingRanking(false)
     }
@@ -168,7 +157,7 @@ export default function CumplePage() {
     setHintsByStage(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
     setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
     if (type === 'letter') {
-      setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answerLength, (previous[activeStage] || 0) + 1) }))
+      setRevealedLetters(previous => ({ ...previous, [activeStage]: Math.min(stage.answer.length, (previous[activeStage] || 0) + 1) }))
     } else if (type !== 'material') {
       setVisibleHints(previous => ({ ...previous, [activeStage]: [...(previous[activeStage] || []), type] }))
     }
@@ -200,40 +189,33 @@ export default function CumplePage() {
 
   async function checkAnswer(e: React.FormEvent) {
     e.preventDefault()
-    if (completed.includes(activeStage) || (attemptsByStage[activeStage] || 0) >= 5 || isAdvancing) return
+    if (!stage.answer || completed.includes(activeStage) || (attemptsByStage[activeStage] || 0) >= 5 || isAdvancing) return
 
-    const nextAttempts = (attemptsByStage[activeStage] || 0) + 1
-    const hintsUsed = (hintsByStage[activeStage] || []).length
-    try {
-      const guestId = localStorage.getItem('cryptic_guest_id')
-      if (!guestId) throw new Error('No encontramos tu registro de participante. Salí y volvé a ingresar con tu nombre.')
-      const supabase = createClient()
-      const { data, error } = await supabase.functions.invoke('cryptic-score', {
-        body: {
-          guest_id: guestId,
-          stage_number: activeStage,
-          answer,
-          hints_used: hintsUsed,
-        },
-      })
-      if (error) throw error
+    const normalizeAnswer = (value: string) => value
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .toLowerCase()
+      .replace(/[^a-z]/g, '')
 
-      const attemptsUsed = Number(data?.attempts_used ?? nextAttempts)
-      if (!data?.correct) {
-        setAttemptsByStage(previous => ({ ...previous, [activeStage]: attemptsUsed }))
-        setPointsByStage(previous => ({ ...previous, [activeStage]: Number(data?.points_preview ?? Math.max(0, (previous[activeStage] ?? 100) - 10)) }))
-        setNotice(data?.locked || attemptsUsed >= 5 ? 'Se terminaron los 5 intentos de este críptico. Podés seguir con el próximo desafío.' : 'Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
+    if (normalizeAnswer(answer) === normalizeAnswer(stage.answer)) {
+      const earned = pointsByStage[activeStage] ?? 100
+      try {
+        const guestId = localStorage.getItem('cryptic_guest_id')
+        if (!guestId) throw new Error('No encontramos tu registro de participante. Salí y volvé a ingresar con tu nombre.')
+        const supabase = createClient()
+        const { error } = await supabase.rpc('add_cryptic_points', {
+          p_guest_id: guestId,
+          p_points: earned,
+        })
+        if (error) throw error
+      } catch (error) {
+        setNotice(error instanceof Error ? `No se pudieron guardar tus puntos: ${error.message}` : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
         return
       }
 
-      const earned = Number(data.points_awarded || 0)
-      setAttemptsByStage(previous => ({ ...previous, [activeStage]: attemptsUsed }))
-      setPointsByStage(previous => ({ ...previous, [activeStage]: Number(data?.points_preview ?? earned) }))
-      setCompleted(previous => previous.includes(activeStage) ? previous : [...previous, activeStage])
-      setTotalPoints(Number(data.total_points || 0))
-      setNotice(data.already_completed
-        ? 'Esta etapa ya estaba registrada en el ranking.'
-        : '¡Eso es! Encontraste la respuesta. Sumaste ' + earned + ' puntos y quedaron guardados en el ranking.')
+      setCompleted(previous => [...previous, activeStage])
+      setTotalPoints(total => total + earned)
+      setNotice('¡Eso es! Encontraste la respuesta. Tus puntos quedaron guardados en el ranking.')
 
       if (activeStage < stages.length) {
         setIsAdvancing(true)
@@ -250,8 +232,11 @@ export default function CumplePage() {
           setIsAdvancing(false)
         }, 4000)
       }
-    } catch (error) {
-      setNotice(error instanceof Error ? 'No se pudieron guardar tus puntos: ' + error.message : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
+    } else {
+      const nextAttempts = (attemptsByStage[activeStage] || 0) + 1
+      setAttemptsByStage(previous => ({ ...previous, [activeStage]: nextAttempts }))
+      setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
+      setNotice(nextAttempts >= 5 ? 'Se terminaron los 5 intentos de este críptico. Podés seguir con el próximo desafío.' : 'Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
     }
   }
 
@@ -294,12 +279,14 @@ export default function CumplePage() {
         <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>ADMINISTRADOR</button>
       </div>
       {activeTab === 'admin' ? <section className="birthday-ranking">
-        <div className="birthday-ranking-heading"><span className="birthday-kicker">ACCESO RESTRINGIDO</span><h2>Administración</h2><p>La administración requiere una sesión activa de propietario en SÚPERVECINO GESTIÓN.</p></div>
+        <div className="birthday-ranking-heading"><span className="birthday-kicker">ACCESO RESTRINGIDO</span><h2>Administración</h2><p>Ingresá el código para habilitar las acciones de administrador.</p></div>
         {!adminUnlocked ? <form className="birthday-admin-form" onSubmit={unlockAdmin}>
-          <button className="birthday-primary" type="submit">Verificar sesión de propietario</button>
+          <label htmlFor="admin-pin">Código de administrador</label>
+          <input id="admin-pin" type="password" inputMode="numeric" value={adminPin} onChange={e=>setAdminPin(e.target.value)} placeholder="Ingresá el código" maxLength={12} required />
+          <button className="birthday-primary" type="submit">Habilitar administración</button>
         </form> : <div className="birthday-admin-actions">
-          <p>Acceso de propietario habilitado.</p>
-          <button className="birthday-ranking-refresh" onClick={resetRanking} disabled={resettingRanking}>{resettingRanking ? 'Reiniciando...' : 'Reiniciar puntajes'}</button>
+          <p>Acceso habilitado.</p>
+          <button className="birthday-ranking-refresh" onClick={resetRanking} disabled={resettingRanking}>{resettingRanking ? 'Reiniciando...' : 'Reiniciar ranking'}</button>
         </div>}
         {adminMessage && <p className="birthday-hint-text" role="status">{adminMessage}</p>}
       </section> : activeTab === 'ranking' ? <section className="birthday-ranking">
@@ -313,8 +300,8 @@ export default function CumplePage() {
         <article className="birthday-challenge">
           <div className="birthday-challenge-top"><span>{stage.level}</span><span>DESAFÍO {String(stage.number).padStart(2,'0')} / {String(stages.length).padStart(2,'0')}</span></div>
           <div className="birthday-scorebar"><span>ESTE CRÍPTICO</span><strong>{pointsByStage[activeStage] ?? 100} PTS</strong><span>INTENTOS: {attemptsByStage[activeStage] || 0}/5</span></div>
-          {stage.answerLength ? <>
-            <div className="birthday-cryptic-length">{stage.answerLength} LETRAS</div><div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Oreja|revuelta|la noche sin dormir|Jacinto|esconde|lo que sostiene el pantalón|Lo que hornea el panadero|una época|guarda las migas en la mesa|Donde viaja la carta|junto a|la totalidad|abriga hasta las rodillas|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
+          {stage.answer ? <>
+            <div className="birthday-cryptic-length">{stage.answer.length} LETRAS</div><div className="birthday-cryptic-clue">{stage.clue.split(/(Cámara|RA|perdió|¿dónde duermo\\?|Norte|Isla|el comienzo|Chocolate|alérgico a lo inmóvil|Oreja|revuelta|la noche sin dormir|Jacinto|esconde|lo que sostiene el pantalón|Lo que hornea el panadero|una época|guarda las migas en la mesa|Donde viaja la carta|junto a|la totalidad|abriga hasta las rodillas|Entre|Mil|Ilusiones|Late|Siempre|Ese|nombre que hace sonreír al corazón|2892|principios|encontré|por fin|el lugar indicado|Océano|agua|la cabeza|masa redonda frita|Es el dios más humano de todos)/gi).map((part: string,index: number)=>{
               const activeTypes = hintsByStage[activeStage] || []
               const shouldMark = activeTypes.some(type => type !== 'letter' && stage.parts?.[type as keyof typeof stage.parts]?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR')))
               return shouldMark ? <span key={index} className={'cryptic-mark '+(activeTypes.includes('definition') && stage.parts?.definition?.some((term: string)=>term.toLocaleLowerCase('es-AR')===part.toLocaleLowerCase('es-AR'))?'mark-definition':activeTypes.includes('indicator') && stage.parts?.indicator?.some((term: string) => term.toLocaleLowerCase('es-AR') === part.toLocaleLowerCase('es-AR'))?'mark-indicator':'mark-material')}>{part}</span> : <span key={index}>{part}</span>
@@ -325,14 +312,14 @@ export default function CumplePage() {
                 {(['definition','indicator','material','letter'] as const).map(type=><button key={type} type="button" disabled={(hintsByStage[activeStage] || []).includes(type) || isAdvancing || (attemptsByStage[activeStage] || 0) >= 5} onClick={()=>requestHint(type)}>{type==='definition'?'Pista: definición':type==='indicator'?'Pista: indicador':type==='material'?'Pista: material':'Revelar una letra'} <small>−10 pts</small></button>)}
               </div>
               {(['definition','indicator','material'] as const).filter(type=>(visibleHints[activeStage] || []).includes(type)).map(type=><p className="birthday-hint-text" key={type}>{stage.hints[type]}</p>)}
-              {(revealedLetters[activeStage] || 0)>0 && <p className="birthday-hint-text">Letras reveladas: {stage.firstLetter}</p>}
+              {(revealedLetters[activeStage] || 0)>0 && <p className="birthday-hint-text">Letras reveladas: {stage.answer.slice(0,revealedLetters[activeStage]).split('').join(' · ')}</p>}
               <form className="birthday-answer" onSubmit={checkAnswer}>
                 <label htmlFor="game-answer">Escribí tu respuesta (acepta mayúsculas y minúsculas)</label>
                 <div><input id="game-answer" value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Escribí tu respuesta..." maxLength={20}/><button type="submit"><ArrowRight size={17}/></button></div>
               </form>
               </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Podés rendirte para continuar.</span></div>}
               <button type="button" className="birthday-surrender" onClick={surrenderChallenge} disabled={isAdvancing}>Rendirme y pasar al siguiente · 0 puntos</button>
-            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><strong>{stage.answerLength} letras</strong><span>Podés continuar con el siguiente desafío.</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>Respuesta no revelada</strong><span>¡Muy bien! La respuesta fue validada por el sistema.</span></div>}
+            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><strong>{stage.answer}</strong><span>La respuesta era esta. Continuando en unos segundos…</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! La respuesta queda visible 4 segundos antes de continuar.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}{isAdvancing ? ' Cargando el siguiente desafío…' : ''}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
