@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     const today = new Date().toISOString().slice(0, 10)
     const [productsResult, salesResult, cashResult, purchasesResult] = await Promise.all([
-      db.from('products').select('name,brand,presentation,sale_price,cost_price,vat_rate,stock,min_stock,manages_stock,active').eq('active', true).order('name').limit(700),
+      db.rpc('get_products_management').limit(700),
       db.from('sales').select('sold_at,status,subtotal,discount,total').gte('sold_at', since).order('sold_at', { ascending: false }).limit(1500),
       db.from('cash_sessions').select('opened_at,closed_at,opening_amount,closing_amount,expected_amount,notes').order('opened_at', { ascending: false }).limit(40),
       db.from('purchases').select('invoice_number,purchase_date,due_date,status,subtotal,tax_total,total,supplier_id').order('purchase_date', { ascending: false }).limit(250)
