@@ -39,7 +39,7 @@ No se deben desplegar migraciones ni funciones de esta rama en producción antes
 
 ## Respaldo automático: alcance de la verificación
 
-El workflow excluye servicios que no se necesitan para las pruebas SQL; conserva PostgreSQL y ejecuta las migraciones y pgTAP en una base efímera. La Edge Function se valida con `deno check`; no se ejecuta end-to-end en esta etapa.
+El workflow excluye servicios no utilizados (Auth, Realtime, Storage, Studio, Mail y Analytics), pero conserva PostgreSQL, REST y el runtime de Edge Functions. Las migraciones y pgTAP se ejecutan en la base efímera; la Edge Function se valida con `deno check`.
 
 La base efímera de GitHub Actions se reconstruye desde las migraciones versionadas y fixtures sintéticos. **No es una restauración del backup físico automático de producción** y no demuestra por sí sola que ese backup pueda restaurarse.
 
