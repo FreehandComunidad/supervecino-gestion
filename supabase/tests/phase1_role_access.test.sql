@@ -56,9 +56,10 @@ select is(
   0,
   'cashier cannot read internal app settings'
 );
-update public.app_settings
-set value = '{"enabled":false}'::jsonb
-where key = 'ci-test-setting';
+select lives_ok(
+  'update public.app_settings set value = ''{"enabled":false}''::jsonb where key = ''ci-test-setting''',
+  'cashier update attempt is safely filtered by RLS'
+);
 reset role;
 select is(
   (select value->>'enabled' from public.app_settings where key = 'ci-test-setting'),
