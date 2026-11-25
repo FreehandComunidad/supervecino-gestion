@@ -44,7 +44,6 @@ Deno.serve(async (request: Request) => {
     guest_id?: string
     stage_number?: number
     answer?: string
-    attempts?: number
     hints_used?: number
   }
   try {
@@ -56,7 +55,6 @@ Deno.serve(async (request: Request) => {
   const guestId = String(body.guest_id || "")
   const stageNumber = Number(body.stage_number)
   const submittedAnswer = String(body.answer || "")
-  const attempts = Number(body.attempts)
   const hintsUsed = Number(body.hints_used)
 
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(guestId)) {
@@ -64,9 +62,6 @@ Deno.serve(async (request: Request) => {
   }
   if (!Number.isInteger(stageNumber) || stageNumber < 1 || stageNumber > 20) {
     return respond({ error: "Etapa inválida." }, 400)
-  }
-  if (!Number.isInteger(attempts) || attempts < 1 || attempts > 5) {
-    return respond({ error: "Cantidad de intentos inválida." }, 400)
   }
   if (!Number.isInteger(hintsUsed) || hintsUsed < 0 || hintsUsed > 3) {
     return respond({ error: "Cantidad de pistas inválida." }, 400)
@@ -77,31 +72,42 @@ Deno.serve(async (request: Request) => {
     return respond({ error: "La etapa no está configurada." }, 503)
   }
 
-  if (normalize(submittedAnswer) !== normalize(expectedAnswer)) {
-    return respond({ correct: false }, 200)
-  }
-
-  const points = Math.max(60, 100 - ((attempts - 1) * 10) - (hintsUsed * 10))
+  const isCorrect = normalize(submittedAnswer) === normalize(expectedAnswer)
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const { data, error } = await supabase.rpc("add_cryptic_points", {
+  const { data, error } = await supabase.rpc("record_cryptic_attempt", {
     p_guest_id: guestId,
     p_stage_number: stageNumber,
-    p_points: points,
+    p_is_correct: isCorrect,
+    p_hints_used: hintsUsed,
   })
 
   if (error) {
-    return respond({ error: "No se pudieron guardar los puntos." }, 500)
+    return respond({ error: "No se pudo registrar el intento." }, 500)
   }
 
-  const result = data as { awarded?: boolean; points_awarded?: number; total_points?: number }
+  const result = data as {
+    correct?: boolean
+    awarded?: boolean
+    points_awarded?: number
+    total_points?: number
+    already_completed?: boolean
+    attempts_used?: number
+    remaining_attempts?: number
+    locked?: boolean
+    points_preview?: number
+  }
   return respond({
-    correct: true,
-    awarded: Boolean(result?.awarded),
+    correct: Boolean(result?.correct),
+    awarded: Number(result?.points_awarded || 0) > 0,
     points_awarded: Number(result?.points_awarded || 0),
     total_points: Number(result?.total_points || 0),
-    already_completed: !result?.awarded,
+    already_completed: Boolean(result?.already_completed),
+    attempts_used: Number(result?.attempts_used || 0),
+    remaining_attempts: Number(result?.remaining_attempts || 0),
+    locked: Boolean(result?.locked),
+    points_preview: Number(result?.points_preview || 0),
   })
 })
