@@ -7,7 +7,7 @@ const anonKey = process.env.SUPABASE_ANON_KEY!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const password = 'CI-only-Synthetic-Password-2026!'
 const service = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
-let cashierId = '', managerId = '', ownerId = '', stockProductId = '', nonStockProductId = '', supplierId = ''
+let cashierId = '', managerId = '', stockProductId = '', nonStockProductId = '', supplierId = ''
 let cashierClient: ReturnType<typeof createClient>, managerClient: ReturnType<typeof createClient>, ownerClient: ReturnType<typeof createClient>
 let cashierToken = '', managerToken = ''
 
@@ -31,7 +31,7 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     const owner = await createUser('ci-owner@supervecino.local', 'owner')
     cashierId = cashier.id; cashierClient = cashier.client; cashierToken = cashier.token
     managerId = manager.id; managerClient = manager.client; managerToken = manager.token
-    ownerId = owner.id; ownerClient = owner.client
+    ownerClient = owner.client
     const supplier = await service.from('suppliers').insert({ name: 'CI Synthetic Supplier', active: true }).select('id').single()
     if (supplier.error) throw supplier.error
     supplierId = supplier.data.id
@@ -140,6 +140,7 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     expect((await managerClient.from('supplier_payments').select('id').eq('purchase_id', purchaseId)).data).toHaveLength(2)
     expect((await managerClient.from('operating_expenses').select('id')).data).toHaveLength(1)
     expect((await managerClient.from('sales').select('id')).data!.length).toBeGreaterThanOrEqual(2)
+    expect((await ownerClient.from('purchases').select('id').eq('id', purchaseId)).data).toHaveLength(1)
 
     const cashierAssistant = await request.post('/api/assistant', { headers: { Authorization: 'Bearer ' + cashierToken }, data: { messages: [{ role: 'user', content: 'Resumen de ventas' }] } })
     expect(cashierAssistant.status()).toBe(403)
@@ -149,18 +150,21 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     const opened = await managerClient.rpc('open_cash_session', { p_opening_amount: 0 })
     expect(opened.error).toBeNull()
     const idempotencyKey = randomUUID()
-    const saleArgs = { p_items: [{ product_id: stockProductId, quantity: 1 }], p_payments: [{ method: 'transfer', amount: 100 }], p_discount: 0, p_customer_id: null, p_notes: 'CI concurrent retry', p_idempotency_key: idempotencyKey }
+    const saleArgs = { p_items: [{ product_id: stockProductId, quantity: 1 }], p_payments: [{ method: 'cash', amount: 60 }, { method: 'transfer', amount: 40 }], p_discount: 0, p_customer_id: null, p_notes: 'CI concurrent retry', p_idempotency_key: idempotencyKey }
     const before = await service.from('products').select('stock').eq('id', stockProductId).single()
     const [first, retry] = await Promise.all([managerClient.rpc('create_pos_sale', saleArgs), managerClient.rpc('create_pos_sale', saleArgs)])
     expect(first.error).toBeNull(); expect(retry.error).toBeNull()
     expect([first.data?.duplicate, retry.data?.duplicate].filter(Boolean)).toHaveLength(1)
     const idempotentSales = await service.from('sales').select('id').eq('idempotency_key', idempotencyKey)
     expect(idempotentSales.data).toHaveLength(1)
+    const splitPayments = await service.from('payments').select('method,amount').eq('sale_id', idempotentSales.data![0].id)
+    expect(splitPayments.data).toHaveLength(2)
+    expect(new Set(splitPayments.data!.map(p => p.method))).toEqual(new Set(['cash', 'transfer']))
     const after = await service.from('products').select('stock').eq('id', stockProductId).single()
     expect(Number(after.data!.stock)).toBe(Number(before.data!.stock) - 1)
-    const mismatched = await managerClient.rpc('create_pos_sale', { ...saleArgs, p_discount: 1, p_payments: [{ method: 'transfer', amount: 99 }] })
+    const mismatched = await managerClient.rpc('create_pos_sale', { ...saleArgs, p_discount: 1, p_payments: [{ method: 'cash', amount: 60 }, { method: 'transfer', amount: 39 }] })
     expect(mismatched.error?.message).toContain('La clave de idempotencia ya fue utilizada para otra operación.')
-    const closed = await managerClient.rpc('close_cash_session', { p_closing_amount: 0, p_notes: 'CI cierre de idempotencia' })
+    const closed = await managerClient.rpc('close_cash_session', { p_closing_amount: 60, p_notes: 'CI cierre de idempotencia' })
     expect(closed.error).toBeNull()
   })
 })
