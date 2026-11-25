@@ -19,6 +19,7 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
  const [products,setProducts]=useState<Product[]>([])
  const [sales,setSales]=useState<Sale[]>([])
  const [cash,setCash]=useState<Cash[]>([])
+ const [cashMovements,setCashMovements]=useState<CashMovement[]>([])
  const [profiles,setProfiles]=useState<Record<string,string>>({})
  const [priceEdits,setPriceEdits]=useState<Record<string,{cost:string;sale:string;vat:string}>>({})
  const [importing,setImporting]=useState(false)
