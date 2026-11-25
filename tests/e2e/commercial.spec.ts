@@ -6,9 +6,9 @@ const url = process.env.SUPABASE_URL!
 const anonKey = process.env.SUPABASE_ANON_KEY!
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const password = 'CI-only-Synthetic-Password-2026!'
-const service = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
+const service = createClient<any>(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } })
 let cashierId = '', managerId = '', stockProductId = '', nonStockProductId = '', supplierId = ''
-let cashierClient: ReturnType<typeof createClient>, managerClient: ReturnType<typeof createClient>, ownerClient: ReturnType<typeof createClient>
+let cashierClient: ReturnType<typeof createClient<any>>, managerClient: ReturnType<typeof createClient<any>>, ownerClient: ReturnType<typeof createClient<any>>
 let cashierToken = '', managerToken = ''
 
 async function createUser(email: string, role: 'owner' | 'manager' | 'cashier') {
@@ -16,7 +16,7 @@ async function createUser(email: string, role: 'owner' | 'manager' | 'cashier') 
   if (error || !data.user) throw error ?? new Error('No se pudo crear el usuario sintético ' + email)
   const profile = await service.from('profiles').upsert({ id: data.user.id, full_name: email.split('@')[0], role, active: true })
   if (profile.error) throw profile.error
-  const client = createClient(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } })
+  const client = createClient<any>(url, anonKey, { auth: { autoRefreshToken: false, persistSession: false } })
   const signedIn = await client.auth.signInWithPassword({ email, password })
   if (signedIn.error || !signedIn.data.session) throw signedIn.error ?? new Error('No se pudo iniciar sesión: ' + email)
   return { id: data.user.id, client, token: signedIn.data.session.access_token }
