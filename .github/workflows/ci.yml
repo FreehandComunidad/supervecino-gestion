@@ -13,7 +13,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
       - name: Generate lockfile
         run: npm install --package-lock-only --ignore-scripts
       - name: Install dependencies
@@ -29,5 +28,5 @@ jobs:
       - name: Production build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://mwpnagwjeqyibwmvcvel.supabase.co
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          NEXT_PUBLIC_SUPABASE_URL: https://preview-disabled.invalid
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_preview_disabled
