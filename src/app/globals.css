@@ -341,3 +341,57 @@
 .expense-table{grid-template-columns:1fr 1.5fr 1fr .8fr;min-width:760px}
 @media(max-width:900px){.expense-layout{grid-template-columns:1fr}.expense-filters{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.expense-filters{grid-template-columns:1fr}}
+
+
+/* Larger, clearer commercial management typography and spacing */
+.management{max-width:1600px;margin:0 auto;padding:30px clamp(18px,3vw,42px) 56px}
+.management-head{gap:22px;margin-bottom:24px}
+.management-head h1{font-size:clamp(28px,3vw,36px);letter-spacing:-.8px;line-height:1.15}
+.management-head .muted,.management>.muted{font-size:15px;line-height:1.65;max-width:850px}
+.management .eyebrow{font-size:11px;letter-spacing:1.6px}
+.management .subheading{font-size:20px;margin:30px 0 14px}
+.management .data-table{border-radius:13px}
+.management .table-row{font-size:14px;min-height:58px;padding:12px 15px}
+.management .table-row small{font-size:12px;line-height:1.45}
+.management .table-head{font-size:12px;min-height:48px}
+.management input,.management select,.management textarea{font-size:14px!important;min-height:42px}
+.management button{font-size:14px}
+.management .stats-cards{gap:14px;margin:20px 0 28px}
+.management .stats-cards>div{padding:20px;min-height:120px}
+.management .stats-cards small{font-size:13px}
+.management .stats-cards b{font-size:24px}
+.management .purchase-card{padding:22px;gap:13px}
+.management .purchase-card h2{font-size:18px}
+.management .empty{font-size:14px;padding:28px}
+.management .notice,.management .import-note{font-size:14px;padding:13px 16px}
+.main-nav{gap:7px;padding:10px clamp(12px,2vw,28px);flex-wrap:wrap}
+.main-nav button{font-size:13px!important;padding:11px 14px!important;min-height:42px}
+.expense-layout{grid-template-columns:minmax(300px,.72fr) minmax(0,1.8fr);gap:20px}
+.expense-filters{padding:16px;gap:12px}
+.expense-table{min-width:800px}
+.supplier-payment-form{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr auto;gap:9px;padding:14px 16px;background:#f4f8f4;border-top:1px solid var(--line);align-items:center}
+.supplier-payment-form input,.supplier-payment-form select{min-width:0;width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff}
+.purchase-record{border-bottom:1px solid var(--line)}
+.purchase-record:last-child{border-bottom:0}
+.purchase-payments{padding:7px 16px 7px 24px;color:var(--muted);font-size:12px;background:#fbfdfb}
+.finance-filters{display:flex;gap:14px;flex-wrap:wrap;padding:16px;background:#fff;border:1px solid var(--line);border-radius:13px;margin:20px 0}
+.finance-filters label{display:grid;gap:6px;font-size:12px;font-weight:700;color:var(--muted);min-width:190px}
+.finance-filters input{padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.finance-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:18px 0}
+.finance-cards article,.finance-lower article{background:#fff;border:1px solid var(--line);border-radius:15px;padding:22px;min-width:0}
+.finance-cards article>span{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:var(--green2);color:var(--green);margin-bottom:18px}
+.finance-cards article small{display:block;font-size:13px;color:var(--muted);font-weight:600}
+.finance-cards article>b{display:block;font-size:clamp(21px,2vw,29px);margin:8px 0;overflow-wrap:anywhere}
+.finance-cards article em{display:block;font-style:normal;color:var(--muted);font-size:12px;line-height:1.5}
+.finance-positive{border-color:#b9ddc6!important}
+.finance-negative{border-color:#e8c4be!important}
+.finance-lower{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.finance-lower article>div{display:flex;align-items:center;gap:10px;color:var(--green)}
+.finance-lower h2{font-size:17px;margin:0;color:var(--ink)}
+.finance-lower strong{display:block;font-size:30px;margin:16px 0 8px}
+.finance-lower p,.finance-footnote{font-size:13px;line-height:1.65;color:var(--muted)}
+.finance-overdue{border-color:#e7c2ba!important;background:#fffaf9!important}
+.finance-overdue>div{color:#a34a3d!important}
+.finance-footnote{margin-top:20px;padding:14px 16px;background:#f0f4f0;border-radius:10px}
+@media(max-width:1000px){.finance-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.expense-layout{grid-template-columns:1fr}.supplier-payment-form{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.management{padding:20px 12px 40px}.management-head{align-items:flex-start;flex-direction:column}.finance-cards{grid-template-columns:1fr 1fr;gap:9px}.finance-cards article{padding:14px}.finance-cards article>b{font-size:19px}.finance-lower{grid-template-columns:1fr}.supplier-payment-form{grid-template-columns:1fr}.main-nav{overflow-x:auto;flex-wrap:nowrap}.main-nav button{white-space:nowrap}.management .table-row{font-size:13px}}
