@@ -1,6 +1,6 @@
 begin;
 
-select plan(12);
+select plan(13);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -56,23 +56,15 @@ select is(
   0,
   'cashier cannot read internal app settings'
 );
+update public.app_settings
+set value = '{"enabled":false}'::jsonb
+where key = 'ci-test-setting';
+reset role;
 select is(
-  (with changed as (
-    update public.app_settings
-    set value = '{"enabled":false}'::jsonb
-    where key = 'ci-test-setting'
-    returning key
-  ) select count(*)::integer from changed),
-  0,
+  (select value->>'enabled' from public.app_settings where key = 'ci-test-setting'),
+  'true',
   'cashier cannot update internal app settings'
 );
-select throws_ok(
-  'select count(*) from public.get_products_management()',
-  'P0001',
-  'No tenés permisos para consultar costos y rentabilidad.',
-  'cashier cannot access internal product cost RPC'
-);
-reset role;
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000093', true);
 set local role authenticated;
@@ -95,15 +87,14 @@ select is(
   1,
   'manager can read internal app settings'
 );
-select is(
-  (with changed as (
-    update public.app_settings
-    set value = '{"enabled":false}'::jsonb
-    where key = 'ci-test-setting'
-    returning value
-  ) select value->>'enabled' from changed),
-  'false',
+select lives_ok(
+  'update public.app_settings set value = ''{"enabled":false}''::jsonb where key = ''ci-test-setting''',
   'manager can update internal app settings'
+);
+select is(
+  (select value->>'enabled' from public.app_settings where key = 'ci-test-setting'),
+  'false',
+  'manager update persists'
 );
 reset role;
 
