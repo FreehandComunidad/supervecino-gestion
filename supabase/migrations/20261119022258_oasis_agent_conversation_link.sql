@@ -1,0 +1,1 @@
+alter table public.oasis_conversations add column if not exists primary_agent_id uuid references public.oasis_agents(id) on delete set null; create index if not exists oasis_conversations_agent_idx on public.oasis_conversations(organization_id,primary_agent_id,updated_at desc);

@@ -1,0 +1,55 @@
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to authenticated;
+create or replace function private.oasis_is_org_member(target_org uuid)
+returns boolean language sql stable security definer set search_path=public,pg_temp
+as $$ select exists(select 1 from public.organization_memberships m where m.organization_id=target_org and m.user_id=(select auth.uid()) and m.active) $$;
+create or replace function private.oasis_is_org_admin(target_org uuid)
+returns boolean language sql stable security definer set search_path=public,pg_temp
+as $$ select exists(select 1 from public.organization_memberships m where m.organization_id=target_org and m.user_id=(select auth.uid()) and m.active and m.role in ('owner','admin')) $$;
+revoke all on function private.oasis_is_org_member(uuid) from public,anon;
+revoke all on function private.oasis_is_org_admin(uuid) from public,anon;
+grant execute on function private.oasis_is_org_member(uuid) to authenticated;
+grant execute on function private.oasis_is_org_admin(uuid) to authenticated;
+drop policy if exists oasis_org_read on public.organizations;
+create policy oasis_org_read on public.organizations for select to authenticated using (private.oasis_is_org_member(id));
+drop policy if exists oasis_org_update on public.organizations;
+create policy oasis_org_update on public.organizations for update to authenticated using (private.oasis_is_org_admin(id)) with check (private.oasis_is_org_admin(id));
+drop policy if exists oasis_members_read on public.organization_memberships;
+create policy oasis_members_read on public.organization_memberships for select to authenticated using (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_members_insert on public.organization_memberships;
+create policy oasis_members_insert on public.organization_memberships for insert to authenticated with check (private.oasis_is_org_admin(organization_id));
+drop policy if exists oasis_members_update on public.organization_memberships;
+create policy oasis_members_update on public.organization_memberships for update to authenticated using (private.oasis_is_org_admin(organization_id)) with check (private.oasis_is_org_admin(organization_id));
+drop policy if exists oasis_members_delete on public.organization_memberships;
+create policy oasis_members_delete on public.organization_memberships for delete to authenticated using (private.oasis_is_org_admin(organization_id));
+drop policy if exists oasis_businesses_read on public.businesses;
+create policy oasis_businesses_read on public.businesses for select to authenticated using (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_businesses_manage on public.businesses;
+create policy oasis_businesses_manage on public.businesses for all to authenticated using (private.oasis_is_org_admin(organization_id)) with check (private.oasis_is_org_admin(organization_id));
+drop policy if exists oasis_locations_read on public.business_locations;
+create policy oasis_locations_read on public.business_locations for select to authenticated using (exists(select 1 from public.businesses b where b.id=business_id and private.oasis_is_org_member(b.organization_id)));
+drop policy if exists oasis_locations_manage on public.business_locations;
+create policy oasis_locations_manage on public.business_locations for all to authenticated using (exists(select 1 from public.businesses b where b.id=business_id and private.oasis_is_org_admin(b.organization_id))) with check (exists(select 1 from public.businesses b where b.id=business_id and private.oasis_is_org_admin(b.organization_id)));
+drop policy if exists oasis_agents_read on public.oasis_agents;
+create policy oasis_agents_read on public.oasis_agents for select to authenticated using (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_agents_manage on public.oasis_agents;
+create policy oasis_agents_manage on public.oasis_agents for all to authenticated using (private.oasis_is_org_admin(organization_id)) with check (private.oasis_is_org_admin(organization_id));
+drop policy if exists oasis_tasks_read on public.oasis_tasks;
+create policy oasis_tasks_read on public.oasis_tasks for select to authenticated using (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_tasks_insert on public.oasis_tasks;
+create policy oasis_tasks_insert on public.oasis_tasks for insert to authenticated with check (private.oasis_is_org_member(organization_id) and (created_by is null or created_by=(select auth.uid())));
+drop policy if exists oasis_tasks_update on public.oasis_tasks;
+create policy oasis_tasks_update on public.oasis_tasks for update to authenticated using (private.oasis_is_org_member(organization_id)) with check (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_conversations_read on public.oasis_conversations;
+create policy oasis_conversations_read on public.oasis_conversations for select to authenticated using (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_conversations_insert on public.oasis_conversations;
+create policy oasis_conversations_insert on public.oasis_conversations for insert to authenticated with check (private.oasis_is_org_member(organization_id) and (created_by is null or created_by=(select auth.uid())));
+drop policy if exists oasis_conversations_update on public.oasis_conversations;
+create policy oasis_conversations_update on public.oasis_conversations for update to authenticated using (private.oasis_is_org_member(organization_id)) with check (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_messages_read on public.oasis_messages;
+create policy oasis_messages_read on public.oasis_messages for select to authenticated using (private.oasis_is_org_member(organization_id));
+drop policy if exists oasis_messages_insert on public.oasis_messages;
+create policy oasis_messages_insert on public.oasis_messages for insert to authenticated with check (private.oasis_is_org_member(organization_id) and exists(select 1 from public.oasis_conversations c where c.id=conversation_id and c.organization_id=oasis_messages.organization_id) and ((sender_type='user' and sender_user_id=(select auth.uid())) or (sender_type in ('agent','system') and sender_user_id is null)));
+drop function if exists public.oasis_is_org_member(uuid);
+drop function if exists public.oasis_is_org_admin(uuid);
