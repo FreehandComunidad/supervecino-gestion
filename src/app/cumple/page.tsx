@@ -131,12 +131,12 @@ export default function CumplePage() {
       const { data, error } = await supabase.rpc('reset_cryptic_ranking')
       if (error) throw error
       await loadLeaderboard()
-      setAdminMessage(\`Ranking reiniciado. Se restablecieron los puntos de \${data ?? 0} participantes; los registros se conservaron.\`)
+      setAdminMessage('Ranking reiniciado. Se restablecieron los puntos de ' + (data ?? 0) + ' participantes; los registros se conservaron.')
     } catch (error) {
       const detail = typeof error === 'object' && error !== null && 'message' in error
         ? String((error as { message: unknown }).message)
         : error instanceof Error ? error.message : 'Error desconocido'
-      setAdminMessage(\`No se pudo reiniciar el ranking: \${detail}\`)
+      setAdminMessage('No se pudo reiniciar el ranking: ' + detail)
     } finally {
       setResettingRanking(false)
     }
@@ -232,7 +232,7 @@ export default function CumplePage() {
       setTotalPoints(Number(data.total_points || 0))
       setNotice(data.already_completed
         ? 'Esta etapa ya estaba registrada en el ranking.'
-        : \`¡Eso es! Encontraste la respuesta. Sumaste \${earned} puntos y quedaron guardados en el ranking.\`)
+        : '¡Eso es! Encontraste la respuesta. Sumaste ' + earned + ' puntos y quedaron guardados en el ranking.')
 
       if (activeStage < stages.length) {
         setIsAdvancing(true)
@@ -250,7 +250,7 @@ export default function CumplePage() {
         }, 4000)
       }
     } catch (error) {
-      setNotice(error instanceof Error ? \`No se pudieron guardar tus puntos: \${error.message}\` : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
+      setNotice(error instanceof Error ? 'No se pudieron guardar tus puntos: ' + error.message : 'No se pudieron guardar tus puntos. Intentá nuevamente.')
     }
   }
 
