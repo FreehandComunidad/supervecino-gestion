@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     const grossSales = sales.reduce((sum, s) => sum + Number(s.total || 0), 0)
     const discounts = sales.reduce((sum, s) => sum + Number(s.discount || 0), 0)
     const duePurchases = purchases.filter(p => p.due_date && p.due_date <= today && !['paid', 'cancelled'].includes(String(p.status).toLowerCase()))
-    const margins = products.filter(p => Number(p.sale_price) > 0).map(p => ({ name: p.name, brand: p.brand, salePrice: Number(p.sale_price), cost: Number(p.cost_price), grossMarginPercent: Number(p.sale_price) ? ((Number(p.sale_price) - Number(p.cost_price)) / Number(p.sale_price)) * 100 : 0 })).sort((a,b)=>a.grossMarginPercent-b.grossMarginPercent)
+    const margins = products.filter(p => Number(p.sale_price) > 0).map(p => ({ name: p.name, brand: p.brand, salePrice: Number(p.sale_price), cost: Number(p.cost_price), grossMarginPercent: Number(p.sale_price) ? (((Number(p.sale_price) / (1 + Number(p.vat_rate || 0) / 100)) - Number(p.cost_price)) / (Number(p.sale_price) / (1 + Number(p.vat_rate || 0) / 100))) * 100 : 0 })).sort((a,b)=>a.grossMarginPercent-b.grossMarginPercent)
     const context = {
       fechaConsulta: new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/San_Juan' }),
       periodoVentas: 'Últimos 30 días',
