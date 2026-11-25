@@ -156,16 +156,55 @@ export default function Home() {
   async function finishSale() {
     if (!cart.length || total <= 0) { setMessage('Agregá productos y verificá que el total sea mayor que cero.'); return }
     setBusy(true); setMessage('')
-    const { data, error } = await supabase.rpc('create_pos_sale', {
-      p_items: cart.map(i => ({ product_id: i.id, quantity: i.quantity })),
-      p_payments: [{ method, amount: total }],
+
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData.user) {
+      setBusy(false)
+      setMessage('Tu sesión venció. Volvé a iniciar sesión.')
+      return
+    }
+
+    const p_items = cart.map(i => ({ product_id: i.id, quantity: i.quantity }))
+    const p_payments = [{ method, amount: total }]
+    const requestFingerprint = JSON.stringify({
+      cashier_id: authData.user.id,
+      p_items,
+      p_payments,
       p_discount: discountValue,
       p_customer_id: null,
       p_notes: null,
     })
+
+    let idempotencyKey: string
+    try {
+      const pending = JSON.parse(localStorage.getItem('supervecino_pending_sale') || 'null')
+      if (pending?.fingerprint === requestFingerprint && typeof pending.key === 'string') {
+        idempotencyKey = pending.key
+      } else {
+        idempotencyKey = crypto.randomUUID()
+        localStorage.setItem('supervecino_pending_sale', JSON.stringify({
+          fingerprint: requestFingerprint,
+          key: idempotencyKey,
+        }))
+      }
+    } catch {
+      idempotencyKey = crypto.randomUUID()
+    }
+
+    const { data, error } = await supabase.rpc('create_pos_sale', {
+      p_items,
+      p_payments,
+      p_discount: discountValue,
+      p_customer_id: null,
+      p_notes: null,
+      p_idempotency_key: idempotencyKey,
+    })
+
     setBusy(false)
     if (error) { setMessage(error.message); return }
-    setMessage('Venta registrada correctamente. N.º ' + (data?.sale_number ?? data?.id ?? ''))
+
+    try { localStorage.removeItem('supervecino_pending_sale') } catch {}
+    setMessage((data?.duplicate ? 'Venta ya registrada. N.º ' : 'Venta registrada correctamente. N.º ') + (data?.sale_number ?? data?.id ?? ''))
     setCart([]); setDiscount('0'); await loadProducts(); await checkCash()
   }
   if (!user) return <main className="center-screen"><form className="login-card" onSubmit={login}><div className="brand-mark"><Store size={26}/></div><p className="eyebrow">SISTEMA COMERCIAL</p><h1>SÚPERVECINO <span>GESTIÓN</span></h1><p className="muted">Ingresá con tu usuario para abrir el punto de venta.</p><label>Usuario<input type="text" autoComplete="username" value={username} onChange={e=>setUsername(e.target.value)} required /></label><label>Contraseña<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required /></label><button className="primary full" disabled={busy}>{busy ? 'Ingresando…' : 'Ingresar'}</button>{message && <p className="notice">{message}</p>}</form></main>
