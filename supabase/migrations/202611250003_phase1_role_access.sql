@@ -29,6 +29,12 @@ using (
   or private.get_current_app_role() in ('owner', 'manager')
 );
 
+-- Configuración interna del negocio: solo responsables autorizados.
+drop policy if exists app_settings_auth_access on public.app_settings;
+create policy app_settings_read_managers
+on public.app_settings for select to authenticated
+using (private.get_current_app_role() in ('owner', 'manager'));
+
 -- Catálogo: empleados ven datos operativos, solo responsables administran.
 drop policy if exists products_read_active on public.products;
 create policy products_read_active
