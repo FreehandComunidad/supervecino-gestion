@@ -1,0 +1,76 @@
+name: Database CI (isolated cloud)
+
+on:
+  push:
+    branches:
+      - security/phase-1-hardening
+    paths:
+      - "supabase/**"
+      - ".github/workflows/database-ci.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/**"
+      - ".github/workflows/database-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated-database:
+    name: Supabase local stack on GitHub runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.1
+
+      - name: Assert this job has no remote Supabase credentials
+        shell: bash
+        run: |
+          if [[ -f supabase/.temp/project-ref ]]; then
+            echo "Unexpected linked Supabase project metadata found; refusing to continue."
+            exit 1
+          fi
+          if env | grep -Eq '^SUPABASE_(ACCESS_TOKEN|DB_PASSWORD|PROJECT_ID)='; then
+            echo "Remote Supabase credentials are not allowed in this isolated test job."
+            exit 1
+          fi
+
+      - name: Create ephemeral local Supabase configuration
+        shell: bash
+        run: |
+          if [[ ! -f supabase/config.toml ]]; then
+            supabase init
+          fi
+          test -f supabase/config.toml
+
+      - name: Start isolated Supabase stack
+        run: supabase start
+
+      - name: Rebuild local database from tracked migrations
+        run: supabase db reset --local
+
+      - name: Run database policy and function tests when present
+        shell: bash
+        run: |
+          if compgen -G "supabase/tests/**/*.sql" > /dev/null || find supabase/tests -type f \( -name '*.sql' -o -name '*.pg' \) -print -quit 2>/dev/null | grep -q .; then
+            supabase test db --local
+          else
+            echo "No pgTAP database tests are committed yet; migration replay was still executed."
+          fi
+
+      - name: Stop isolated stack
+        if: always()
+        run: supabase stop --no-backup
