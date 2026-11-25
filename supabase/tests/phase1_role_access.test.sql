@@ -1,6 +1,6 @@
 begin;
 
-select plan(11);
+select plan(12);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -55,6 +55,16 @@ select is(
   (select count(*)::integer from public.app_settings where key = 'ci-test-setting'),
   0,
   'cashier cannot read internal app settings'
+);
+select is(
+  (with changed as (
+    update public.app_settings
+    set value = '{"enabled":false}'::jsonb
+    where key = 'ci-test-setting'
+    returning key
+  ) select count(*)::integer from changed),
+  0,
+  'cashier cannot update internal app settings'
 );
 select throws_ok(
   'select count(*) from public.get_products_management()',
