@@ -174,7 +174,7 @@ begin
 
   return v_id;
 end;
-$;
+$register_supplier_payment$;
 
 revoke all on function public.register_supplier_payment(uuid, numeric, date, text, text, text) from public, anon;
 grant execute on function public.register_supplier_payment(uuid, numeric, date, text, text, text) to authenticated;
