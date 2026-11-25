@@ -331,7 +331,7 @@ export default function CumplePage() {
               </form>
               </> : <div className="birthday-solution"><b>INTENTOS AGOTADOS</b><span>Este desafío quedó cerrado. Podés rendirte para continuar.</span></div>}
               <button type="button" className="birthday-surrender" onClick={surrenderChallenge} disabled={isAdvancing}>Rendirme y pasar al siguiente · 0 puntos</button>
-            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><strong>{stage.answerLength} letras</strong><span>La respuesta era esta. Continuando en unos segundos…</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>{stage.answer}</strong><span>¡Muy bien! La respuesta queda visible 4 segundos antes de continuar.</span></div>}
+            </> : surrendered.includes(activeStage) ? <div className="birthday-solution"><b>DESAFÍO ABANDONADO</b><strong>{stage.answerLength} letras</strong><span>Podés continuar con el siguiente desafío.</span></div> : <div className="birthday-solution"><b>¡RESUELTO!</b><strong>Respuesta no revelada</strong><span>¡Muy bien! La respuesta fue validada por el sistema.</span></div>}
           </> : <div className="birthday-coming"><LockKeyhole size={17}/><div><b>Enigma en preparación</b><span>Este desafío todavía está en preparación.</span></div></div>}
           {notice&&<p className="birthday-notice">{notice}{isAdvancing ? ' Cargando el siguiente desafío…' : ''}</p>}
           <div className="birthday-challenge-foot"><span><Sparkles size={14}/> Pensá, probá y descubrí</span><span>NO HAY LÍMITE DE TIEMPO</span></div>
