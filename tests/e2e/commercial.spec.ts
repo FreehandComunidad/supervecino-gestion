@@ -130,6 +130,7 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     expect(cashierPurchases.data).toEqual([]); expect(cashierPayments.data).toEqual([]); expect(cashierExpenses.data).toEqual([])
     expect(cashierSuppliers.data).toEqual([]); expect(cashierStockMovements.data).toEqual([])
     expect((await cashierClient.from('products').select('cost_price')).error).not.toBeNull()
+    expect((await cashierClient.from('products').select('vat_rate')).error).not.toBeNull()
     expect((await cashierClient.rpc('get_products_management')).error).not.toBeNull()
     expect((await cashierClient.rpc('create_purchase_with_items', { p_supplier_id: supplierId, p_invoice_number: 'CI-CASHIER-BLOCKED', p_purchase_date: today, p_due_date: today, p_notes: null, p_items: [{ product_id: stockProductId, quantity: 1, unit_cost_net: 50, vat_rate: 21 }] })).error).not.toBeNull()
     expect((await cashierClient.rpc('receive_purchase', { p_purchase_id: purchaseId })).error).not.toBeNull()
