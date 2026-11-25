@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          supabase start -x gotrue,realtime,storage-api,imgproxy,studio,mailpit,analytics,vector,supavisor,rest,edge-runtime,kong,pgmeta 2>&1 | sed -u -E \
+          supabase start -x gotrue,realtime,storage-api,imgproxy,studio,mailpit,analytics,vector,supavisor 2>&1 | sed -u -E \
             -e 's/(sb_(publishable|secret)_[A-Za-z0-9_-]+)/[REDACTED]/g' \
             -e 's/(Secret Key|Access Key)[[:space:]]*\|.*/\1 | [REDACTED]/g' \
             -e 's/(Database|URL)[[:space:]]*\|.*/\1 | [REDACTED]/g'
