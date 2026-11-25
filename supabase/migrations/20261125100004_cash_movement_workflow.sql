@@ -132,7 +132,7 @@ create or replace function public.register_supplier_payment(
 language plpgsql
 security invoker
 set search_path = ''
-as $
+as $register_supplier_payment$
 declare
   v_purchase public.purchases%rowtype;
   v_paid numeric;
