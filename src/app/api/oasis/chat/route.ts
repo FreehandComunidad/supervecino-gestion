@@ -32,9 +32,6 @@ export async function POST(request: Request) {
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData.user) return Response.json({ error: 'Tu sesión venció. Volvé a iniciar sesión.' }, { status: 401 })
 
-    const { data: appProfile } = await supabase.from('profiles').select('role,active').eq('id', authData.user.id).maybeSingle()
-    const canSeeCosts = Boolean(appProfile?.active && ['owner', 'manager'].includes(appProfile.role))
-
     const body = (await request.json()) as ChatBody
     const agentId = String(body.agentId || '')
     const message = String(body.message || '').trim()
@@ -126,10 +123,11 @@ export async function POST(request: Request) {
       .eq('active', true)
 
     if ((businessCount || 0) === 1) {
-      const productsQuery = canSeeCosts
-        ? supabase.rpc('get_products_management').limit(250)
-        : supabase.from('products').select('name,stock,min_stock,sale_price').eq('active', true).limit(250)
-      const { data: products } = await productsQuery
+      const { data: products } = await supabase
+        .from('products')
+        .select('name,stock,min_stock,sale_price')
+        .eq('active', true)
+        .limit(250)
       const since = new Date(Date.now() - 30 * 86400000).toISOString()
       const { data: sales } = await supabase
         .from('sales')
@@ -142,142 +140,15 @@ export async function POST(request: Request) {
       const completedSales = sales || []
       const revenue = completedSales.reduce((sum: number, sale: any) => sum + Number(sale.total || 0), 0)
       const lowStock = items.filter((p: any) => Number(p.min_stock || 0) > 0 && Number(p.stock || 0) <= Number(p.min_stock || 0))
-      const stockValue = canSeeCosts ? items.reduce((sum: number, p: any) => sum + Number(p.stock || 0) * Number(p.cost_price || 0), 0) : null
-      const contextLines = [
+      businessContext = [
         'Datos de solo lectura del único negocio activo conectado al POS:',
         'Período de ventas: últimos 30 días.',
         'Ventas completadas registradas: ' + completedSales.length,
-        'Facturación registrada:     } else {
-      businessContext = 'Hay más de un negocio activo, pero las tablas actuales del POS todavía no tienen una relación business_id. No atribuyas ventas ni stock a un negocio específico hasta completar esa vinculación.'
-    }
-
-    const systemPrompt = [
-      'Sos ' + agent.name + ', ' + agent.job_title + ' de OASIS HQ.',
-      'Departamento: ' + agent.department + '.',
-      'Especialidad: ' + (agent.specialty || 'Gestión general') + '.',
-      'Instrucciones del perfil: ' + (agent.instructions || 'Ayudar al propietario con análisis y organización.') ,
-      'Respondé siempre en español rioplatense claro y profesional.',
-      'Tu función es analizar, explicar, proponer y ayudar a organizar el trabajo. No afirmes haber ejecutado acciones en sistemas.',
-      'No inventes datos, cifras, proveedores, compras ni movimientos. Si falta información, aclaralo.',
-      'No podés modificar precios, stock, caja, ventas, usuarios ni realizar compras. Para acciones sensibles, pedí aprobación expresa del propietario.',
-      'Los datos comerciales siguientes son de solo lectura y pueden estar incompletos:',
-      businessContext,
-    ].join('\n\n')
-
-    const apiKey = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
-    if (!apiKey) return Response.json({ error: 'El acceso a IA todavía no está habilitado en este entorno.' }, { status: 503 })
-    const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5-mini'
-    const messages = (history || []).slice().reverse().map((item: any) => ({
-      role: item.sender_type === 'user' ? 'user' : 'assistant',
-      content: item.content,
-    }))
-
-    const gatewayResponse = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'system', content: systemPrompt }, ...messages],
-        max_completion_tokens: 1000,
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(55000),
-    })
-    const gatewayData = await gatewayResponse.json()
-    if (!gatewayResponse.ok) {
-      const detail = gatewayData?.error?.message || gatewayData?.message || 'El proveedor de IA no pudo responder.'
-      return Response.json({ error: detail }, { status: gatewayResponse.status >= 500 ? 502 : gatewayResponse.status })
-    }
-
-    const answer = gatewayData?.choices?.[0]?.message?.content
-    if (typeof answer !== 'string' || !answer.trim()) return Response.json({ error: 'El agente no devolvió una respuesta de texto.' }, { status: 502 })
-
-    const { error: saveError } = await supabase.from('oasis_messages').insert({
-      organization_id: membership.organization_id,
-      conversation_id: conversationId,
-      sender_type: 'agent',
-      sender_agent_id: agent.id,
-      content: answer,
-      metadata: { model, usage: gatewayData.usage || null },
-    })
-    if (saveError) return Response.json({ error: saveError.message }, { status: 500 })
-
-    await supabase.from('oasis_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId)
-    return Response.json({ answer, conversationId, model, usage: gatewayData.usage || null })
-  } catch (error: any) {
-    const message = error?.name === 'TimeoutError' ? 'La respuesta tardó demasiado. Intentá nuevamente.' : 'No se pudo completar la conversación.'
-    return Response.json({ error: message }, { status: 500 })
-  }
-}
- + revenue.toFixed(2),
+        'Facturación registrada: $' + revenue.toFixed(2),
         'Productos activos consultados: ' + items.length,
         'Productos bajo o en stock mínimo: ' + lowStock.length,
         'Alertas de stock: ' + lowStock.slice(0, 20).map((p: any) => p.name + ' (stock ' + p.stock + ', mínimo ' + p.min_stock + ')').join('; '),
-      ]
-      if (stockValue !== null) contextLines.push('Valuación estimada del stock a costo neto:     } else {
-      businessContext = 'Hay más de un negocio activo, pero las tablas actuales del POS todavía no tienen una relación business_id. No atribuyas ventas ni stock a un negocio específico hasta completar esa vinculación.'
-    }
-
-    const systemPrompt = [
-      'Sos ' + agent.name + ', ' + agent.job_title + ' de OASIS HQ.',
-      'Departamento: ' + agent.department + '.',
-      'Especialidad: ' + (agent.specialty || 'Gestión general') + '.',
-      'Instrucciones del perfil: ' + (agent.instructions || 'Ayudar al propietario con análisis y organización.') ,
-      'Respondé siempre en español rioplatense claro y profesional.',
-      'Tu función es analizar, explicar, proponer y ayudar a organizar el trabajo. No afirmes haber ejecutado acciones en sistemas.',
-      'No inventes datos, cifras, proveedores, compras ni movimientos. Si falta información, aclaralo.',
-      'No podés modificar precios, stock, caja, ventas, usuarios ni realizar compras. Para acciones sensibles, pedí aprobación expresa del propietario.',
-      'Los datos comerciales siguientes son de solo lectura y pueden estar incompletos:',
-      businessContext,
-    ].join('\n\n')
-
-    const apiKey = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
-    if (!apiKey) return Response.json({ error: 'El acceso a IA todavía no está habilitado en este entorno.' }, { status: 503 })
-    const model = process.env.AI_GATEWAY_MODEL || 'openai/gpt-5-mini'
-    const messages = (history || []).slice().reverse().map((item: any) => ({
-      role: item.sender_type === 'user' ? 'user' : 'assistant',
-      content: item.content,
-    }))
-
-    const gatewayResponse = await fetch('https://ai-gateway.vercel.sh/v1/chat/completions', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: 'system', content: systemPrompt }, ...messages],
-        max_completion_tokens: 1000,
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(55000),
-    })
-    const gatewayData = await gatewayResponse.json()
-    if (!gatewayResponse.ok) {
-      const detail = gatewayData?.error?.message || gatewayData?.message || 'El proveedor de IA no pudo responder.'
-      return Response.json({ error: detail }, { status: gatewayResponse.status >= 500 ? 502 : gatewayResponse.status })
-    }
-
-    const answer = gatewayData?.choices?.[0]?.message?.content
-    if (typeof answer !== 'string' || !answer.trim()) return Response.json({ error: 'El agente no devolvió una respuesta de texto.' }, { status: 502 })
-
-    const { error: saveError } = await supabase.from('oasis_messages').insert({
-      organization_id: membership.organization_id,
-      conversation_id: conversationId,
-      sender_type: 'agent',
-      sender_agent_id: agent.id,
-      content: answer,
-      metadata: { model, usage: gatewayData.usage || null },
-    })
-    if (saveError) return Response.json({ error: saveError.message }, { status: 500 })
-
-    await supabase.from('oasis_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId)
-    return Response.json({ answer, conversationId, model, usage: gatewayData.usage || null })
-  } catch (error: any) {
-    const message = error?.name === 'TimeoutError' ? 'La respuesta tardó demasiado. Intentá nuevamente.' : 'No se pudo completar la conversación.'
-    return Response.json({ error: message }, { status: 500 })
-  }
-}
- + stockValue.toFixed(2))
-      businessContext = contextLines.join('\n')
+      ].join('\n')
     } else {
       businessContext = 'Hay más de un negocio activo, pero las tablas actuales del POS todavía no tienen una relación business_id. No atribuyas ventas ni stock a un negocio específico hasta completar esa vinculación.'
     }
