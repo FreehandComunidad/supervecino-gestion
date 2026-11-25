@@ -1,6 +1,6 @@
 begin;
 
-select plan(10);
+select plan(11);
 
 insert into auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at)
 values
@@ -84,6 +84,10 @@ select is(
   (select count(*)::integer from public.app_settings where key = 'ci-test-setting'),
   1,
   'manager can read internal app settings'
+);
+select lives_ok(
+  'update public.app_settings set value = ''{"enabled":false}''::jsonb where key = ''ci-test-setting''',
+  'manager can update internal app settings'
 );
 reset role;
 
