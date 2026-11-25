@@ -1,6 +1,6 @@
 begin;
 
-select plan(18);
+select plan(20);
 
 select has_table('public', 'cryptic_guests', 'public leaderboard table exists');
 select has_table('public', 'cryptic_attempts', 'private attempt table exists');
