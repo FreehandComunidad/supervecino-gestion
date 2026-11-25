@@ -139,8 +139,10 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     const managerProducts = await managerClient.rpc('get_products_management')
     const ownerProducts = await ownerClient.rpc('get_products_management')
     expect(managerProducts.error).toBeNull(); expect(ownerProducts.error).toBeNull()
-    const stockProductContext = managerProducts.data!.find(p => p.id === stockProductId)
-    expect(Number(stockProductContext.sale_price) - Number(stockProductContext.cost_price)).toBe(50)
+    const productRows = managerProducts.data as Array<{ id: string; sale_price: number | string; cost_price: number | string }>
+    const stockProductContext = productRows.find((product) => product.id === stockProductId)
+    expect(stockProductContext).toBeTruthy()
+    expect(Number(stockProductContext!.sale_price) - Number(stockProductContext!.cost_price)).toBe(50)
     expect((await managerClient.from('cash_sessions').select('id')).data).toHaveLength(1)
     expect((await managerClient.from('cash_movements').select('id')).data).toHaveLength(3)
     expect((await managerClient.from('purchases').select('id').eq('id', purchaseId)).data).toHaveLength(1)
