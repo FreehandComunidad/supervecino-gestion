@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           cd "$CI_SUPABASE_DIR"
-          if ! supabase start --exclude realtime,storage,functions,studio,mail,analytics,pooler > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
+          if ! supabase start --exclude realtime,storage-api,imgproxy,functions,edge-runtime,studio,mailpit,analytics,logflare,vector,supavisor > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
             sed -E 's/(sb_(publishable|secret)_[A-Za-z0-9_-]+)/[REDACTED]/g' "$RUNNER_TEMP/supabase-start.log"
             exit 1
           fi
