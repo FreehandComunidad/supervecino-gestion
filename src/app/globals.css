@@ -291,3 +291,40 @@
 .purchase-card textarea{width:100%;min-height:72px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:12px;background:#fff}.purchase-card h3{font-size:13px;margin:8px 0 0}.purchase-total{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line);font-size:13px}.purchase-total b{font-size:18px}
 
 .purchase-fields select{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;background:#fff}
+
+
+/* Central AI assistant */
+.assistant-shell{max-width:1180px;margin:0 auto;padding:34px 24px 70px}
+.assistant-hero{display:flex;align-items:center;gap:20px;padding:28px 30px;background:linear-gradient(120deg,#173d2d,#245c40);border-radius:20px;color:#fff}
+.assistant-orb{width:64px;height:64px;display:grid;place-items:center;flex:none;border:1px solid #ffffff44;border-radius:18px;background:#ffffff16;color:#d5f4df}
+.assistant-kicker{font-size:10px;letter-spacing:1.8px;color:#c4e5d0;font-weight:800}
+.assistant-hero h1{font-size:clamp(25px,4vw,36px);margin:7px 0 5px}
+.assistant-hero p{margin:0;color:#d9e9df;font-size:13px;line-height:1.6}
+.assistant-safety{display:flex;align-items:flex-start;gap:10px;margin:16px 0;padding:13px 16px;border:1px solid #c9dfd0;border-radius:12px;background:#edf6ef;color:#28563a;font-size:12px;line-height:1.6}
+.assistant-safety svg{flex:none;margin-top:2px}
+.assistant-chat{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.assistant-chat-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 20px;border-bottom:1px solid var(--line)}
+.assistant-chat-head>div{display:flex;align-items:center;gap:9px;font-size:14px}
+.assistant-chat-head .secondary{display:flex;align-items:center;gap:7px;padding:8px 11px;font-size:11px}
+.assistant-messages{min-height:390px;max-height:62vh;overflow:auto;padding:22px;display:flex;flex-direction:column;gap:13px}
+.assistant-welcome{max-width:680px;margin:auto;text-align:center;padding:24px 8px;color:var(--muted)}
+.assistant-welcome>svg{color:var(--green)}
+.assistant-welcome h2{font-size:20px;color:var(--ink);margin:12px 0 7px}
+.assistant-welcome p{font-size:13px;line-height:1.6;margin:0 auto 20px}
+.assistant-starters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.assistant-starters button{padding:12px;text-align:left;border:1px solid var(--line);border-radius:10px;background:#fbfdfb;color:#304239;font-size:12px;line-height:1.45}
+.assistant-starters button:hover{border-color:#9fc8ad;background:#f1f8f3}
+.assistant-message{max-width:min(82%,760px);padding:12px 15px;border-radius:13px;white-space:pre-wrap}
+.assistant-message span{display:block;margin-bottom:5px;font-size:10px;font-weight:800;letter-spacing:.5px;color:var(--muted)}
+.assistant-message p{margin:0;font-size:13px;line-height:1.65}
+.assistant-message.user{align-self:flex-end;background:#eaf3ed;color:#1c3528}
+.assistant-message.assistant{align-self:flex-start;background:#f5f7f5;color:var(--ink);border:1px solid var(--line)}
+.assistant-thinking{display:flex;align-items:center;gap:8px;color:var(--muted)}
+.assistant-thinking svg{animation:assistant-spin 1.2s linear infinite}
+@keyframes assistant-spin{to{transform:rotate(360deg)}}
+.assistant-compose{display:flex;align-items:flex-end;gap:10px;padding:15px 18px;border-top:1px solid var(--line)}
+.assistant-compose textarea{flex:1;min-width:0;resize:vertical;min-height:52px;max-height:150px;border:1px solid var(--line);border-radius:10px;padding:12px;font:inherit;font-size:13px}
+.assistant-compose button{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 17px}
+.assistant-error{margin:0;padding:0 18px 12px;color:#b34338;font-size:12px}
+.assistant-disclaimer{padding:0 18px 15px;margin:0;color:var(--muted);font-size:10px;line-height:1.5}
+@media(max-width:640px){.assistant-shell{padding:18px 12px 45px}.assistant-hero{align-items:flex-start;padding:20px 17px;gap:13px}.assistant-orb{width:48px;height:48px;border-radius:13px}.assistant-kicker{font-size:8px}.assistant-starters{grid-template-columns:1fr}.assistant-messages{padding:14px;min-height:350px}.assistant-message{max-width:95%}.assistant-compose{padding:12px;flex-direction:column;align-items:stretch}.assistant-compose button{justify-content:center}.assistant-chat-head{padding:13px;flex-wrap:wrap}}
