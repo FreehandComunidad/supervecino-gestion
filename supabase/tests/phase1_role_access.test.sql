@@ -85,8 +85,14 @@ select is(
   1,
   'manager can read internal app settings'
 );
-select lives_ok(
-  'update public.app_settings set value = ''{"enabled":false}''::jsonb where key = ''ci-test-setting''',
+select is(
+  (with changed as (
+    update public.app_settings
+    set value = '{"enabled":false}'::jsonb
+    where key = 'ci-test-setting'
+    returning value
+  ) select value->>'enabled' from changed),
+  'false',
   'manager can update internal app settings'
 );
 reset role;
