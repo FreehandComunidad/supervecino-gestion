@@ -36,8 +36,8 @@ export default function ManagementPanel({mode}:{mode:Mode}) {
  const load=useCallback(async()=>{
   setLoading(true);setError('')
   if(mode==='pricing'||mode==='stats'||mode==='inventory'){
-   const {data,error}=await db.from('products').select('id,name,brand,presentation,barcode,sale_price,cost_price,vat_rate,stock,min_stock,unit,manages_stock').eq('active',true).order('name').limit(1000)
-   if(error)setError(error.message);else setProducts((data||[]) as Product[])
+   const {data,error}=await db.rpc('get_products_management')
+   if(error)setError(error.message);else setProducts(((data||[]) as Product[]).sort((a,b)=>a.name.localeCompare(b.name)))
   }
   if(mode==='sales'||mode==='stats'){
    const {data,error}=await db.from('sales').select('id,sale_number,sold_at,status,subtotal,discount,total,cashier_id').order('sold_at',{ascending:false}).limit(500)
