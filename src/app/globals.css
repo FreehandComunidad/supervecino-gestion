@@ -328,3 +328,16 @@
 .assistant-error{margin:0;padding:0 18px 12px;color:#b34338;font-size:12px}
 .assistant-disclaimer{padding:0 18px 15px;margin:0;color:var(--muted);font-size:10px;line-height:1.5}
 @media(max-width:640px){.assistant-shell{padding:18px 12px 45px}.assistant-hero{align-items:flex-start;padding:20px 17px;gap:13px}.assistant-orb{width:48px;height:48px;border-radius:13px}.assistant-kicker{font-size:8px}.assistant-starters{grid-template-columns:1fr}.assistant-messages{padding:14px;min-height:350px}.assistant-message{max-width:95%}.assistant-compose{padding:12px;flex-direction:column;align-items:stretch}.assistant-compose button{justify-content:center}.assistant-chat-head{padding:13px;flex-wrap:wrap}}
+
+
+/* Operating expenses */
+.expense-layout{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(0,1.7fr);gap:16px;margin-top:18px;align-items:start}
+.expense-form label,.expense-filters label{display:grid;gap:6px;color:var(--muted);font-size:11px;font-weight:700}
+.expense-form input,.expense-form select,.expense-form textarea,.expense-filters input,.expense-filters select{width:100%;min-width:0;border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:12px;background:#fff;color:var(--ink)}
+.expense-form textarea{min-height:72px;resize:vertical}
+.expense-form .primary{width:100%;justify-content:center}
+.expense-history{min-width:0}
+.expense-filters{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:9px;margin-bottom:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px}
+.expense-table{grid-template-columns:1fr 1.5fr 1fr .8fr;min-width:760px}
+@media(max-width:900px){.expense-layout{grid-template-columns:1fr}.expense-filters{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.expense-filters{grid-template-columns:1fr}}
