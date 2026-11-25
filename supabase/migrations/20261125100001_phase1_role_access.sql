@@ -209,7 +209,7 @@ language plpgsql
 stable
 security definer
 set search_path = ''
-as $
+as $get_products_management$
 declare
   v_role text := private.get_current_app_role();
 begin
@@ -225,7 +225,7 @@ begin
   where p.active = true
   order by p.name;
 end;
-$$;
+$get_products_management$;
 
 revoke all on function public.get_products_management() from public, anon;
 grant execute on function public.get_products_management() to authenticated;
