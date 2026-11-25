@@ -213,21 +213,22 @@ export default function CumplePage() {
           guest_id: guestId,
           stage_number: activeStage,
           answer,
-          attempts: nextAttempts,
           hints_used: hintsUsed,
         },
       })
       if (error) throw error
 
+      const attemptsUsed = Number(data?.attempts_used ?? nextAttempts)
       if (!data?.correct) {
-        setAttemptsByStage(previous => ({ ...previous, [activeStage]: nextAttempts }))
-        setPointsByStage(previous => ({ ...previous, [activeStage]: Math.max(0, (previous[activeStage] ?? 100) - 10) }))
-        setNotice(nextAttempts >= 5 ? 'Se terminaron los 5 intentos de este críptico. Podés seguir con el próximo desafío.' : 'Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
+        setAttemptsByStage(previous => ({ ...previous, [activeStage]: attemptsUsed }))
+        setPointsByStage(previous => ({ ...previous, [activeStage]: Number(data?.points_preview ?? Math.max(0, (previous[activeStage] ?? 100) - 10)) }))
+        setNotice(data?.locked || attemptsUsed >= 5 ? 'Se terminaron los 5 intentos de este críptico. Podés seguir con el próximo desafío.' : 'Todavía no. Probá otra vez: cada intento incorrecto resta 10 puntos.')
         return
       }
 
       const earned = Number(data.points_awarded || 0)
-      setAttemptsByStage(previous => ({ ...previous, [activeStage]: nextAttempts }))
+      setAttemptsByStage(previous => ({ ...previous, [activeStage]: attemptsUsed }))
+      setPointsByStage(previous => ({ ...previous, [activeStage]: Number(data?.points_preview ?? earned) }))
       setCompleted(previous => previous.includes(activeStage) ? previous : [...previous, activeStage])
       setTotalPoints(Number(data.total_points || 0))
       setNotice(data.already_completed
