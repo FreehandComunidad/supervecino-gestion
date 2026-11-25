@@ -39,6 +39,8 @@ No se deben desplegar migraciones ni funciones de esta rama en producción antes
 
 ## Respaldo automático: alcance de la verificación
 
+El workflow excluye servicios locales que no se utilizan en las pruebas (Auth, Realtime, Storage, Studio, Mail y Analytics); conserva PostgreSQL, REST y el runtime de Edge Functions para reducir memoria y tiempo del runner cloud.
+
 La base efímera de GitHub Actions se reconstruye desde las migraciones versionadas y fixtures sintéticos. **No es una restauración del backup físico automático de producción** y no demuestra por sí sola que ese backup pueda restaurarse.
 
 No se descargan ni copian datos de producción al runner. No se configura una conexión remota de Supabase en los workflows.
