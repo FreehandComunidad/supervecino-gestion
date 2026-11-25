@@ -54,6 +54,7 @@ export default function CentralAssistant() {
       <div><span className="assistant-kicker">SÚPERVECINO · INTELIGENCIA COMERCIAL</span><h1>Asistente central</h1><p>Tu copiloto para entender el negocio, anticipar problemas y preparar decisiones.</p></div>
     </header>
     <div className="assistant-safety"><ShieldCheck size={17}/><span><b>Autonomía limitada</b> · Consulta datos reales y prepara recomendaciones. En esta primera etapa no modifica stock, precios, compras ni caja.</span></div>
+    <p className="assistant-accounting-note" role="note">El margen mostrado es bruto y estimado por producto, usando el costo cargado actualmente. Los gastos operativos no están incluidos; por eso el asistente no calcula ganancia neta.</p>
     <section className="assistant-chat">
       <div className="assistant-chat-head"><div><Sparkles size={18}/><b>¿Qué necesitás saber?</b></div><button className="secondary" onClick={()=>{setMessages([]);setError('')}} disabled={!messages.length||busy}><RotateCcw size={15}/> Nueva consulta</button></div>
       <div className="assistant-messages">

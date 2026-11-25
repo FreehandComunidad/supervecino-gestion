@@ -5,6 +5,18 @@ export const runtime = 'nodejs'
 export const maxDuration = 30
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
+type ProductContext = {
+  name: string
+  brand: string | null
+  presentation: string | null
+  sale_price: number
+  cost_price: number
+  vat_rate: number
+  stock: number
+  min_stock: number
+  manages_stock: boolean
+  active: boolean
+}
 
 const systemPrompt = `Sos el asistente central de SÚPERVECINO GESTIÓN, un comercio minorista de San Juan, Argentina.
 Respondé en español rioplatense, claro, práctico y con importes en pesos argentinos.
@@ -43,7 +55,7 @@ export async function POST(request: Request) {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     const today = new Date().toISOString().slice(0, 10)
     const [productsResult, salesResult, cashResult, purchasesResult] = await Promise.all([
-      db.from('products').select('name,brand,presentation,sale_price,cost_price,vat_rate,stock,min_stock,manages_stock,active').eq('active', true).order('name').limit(700),
+      db.rpc('get_products_management').limit(700),
       db.from('sales').select('sold_at,status,subtotal,discount,total').gte('sold_at', since).order('sold_at', { ascending: false }).limit(1500),
       db.from('cash_sessions').select('opened_at,closed_at,opening_amount,closing_amount,expected_amount,notes').order('opened_at', { ascending: false }).limit(40),
       db.from('purchases').select('invoice_number,purchase_date,due_date,status,subtotal,tax_total,total,supplier_id').order('purchase_date', { ascending: false }).limit(250)
@@ -52,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No pude leer todos los datos. Revisá los permisos o intentá nuevamente.' }, { status: 500 })
     }
 
-    const products = productsResult.data || []
+    const products = (productsResult.data || []) as ProductContext[]
     const sales = (salesResult.data || []).filter(s => s.status !== 'cancelled')
     const cash = cashResult.data || []
     const purchases = purchasesResult.data || []

@@ -1,0 +1,126 @@
+name: Database and commercial E2E CI (isolated cloud)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/**"
+      - "src/app/page.tsx"
+      - "src/app/management-panel.tsx"
+      - "src/app/assistant-panel.tsx"
+      - "src/app/api/assistant/route.ts"
+      - "src/lib/pos-idempotency.*"
+      - "tests/e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+      - ".github/workflows/database-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: database-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  isolated-database-and-e2e:
+    name: Supabase + commercial flows on GitHub runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate lockfile
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.1
+
+      - name: Assert no remote Supabase credentials are available
+        shell: bash
+        run: |
+          if env | grep -Eq '^SUPABASE_(ACCESS_TOKEN|DB_PASSWORD|PROJECT_ID)='; then
+            echo "Remote Supabase credentials are not allowed in this isolated test job."
+            exit 1
+          fi
+          if [[ -f supabase/.temp/project-ref ]]; then
+            echo "Linked production project metadata found in checkout; refusing to continue."
+            exit 1
+          fi
+
+      - name: Assemble a disposable Supabase workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+          CI_SUPABASE_DIR="$RUNNER_TEMP/supervecino-supabase-ci"
+          mkdir -p "$CI_SUPABASE_DIR/supabase/migrations" "$CI_SUPABASE_DIR/supabase/tests"
+          cp supabase/config.toml "$CI_SUPABASE_DIR/supabase/config.toml"
+          cp supabase/ci/bootstrap/*.sql "$CI_SUPABASE_DIR/supabase/migrations/"
+          cp supabase/migrations/*.sql "$CI_SUPABASE_DIR/supabase/migrations/"
+          cp supabase/tests/*.sql "$CI_SUPABASE_DIR/supabase/tests/"
+          echo "CI_SUPABASE_DIR=$CI_SUPABASE_DIR" >> "$GITHUB_ENV"
+
+      - name: Start isolated Supabase stack (Auth + REST + PostgreSQL only)
+        shell: bash
+        run: |
+          cd "$CI_SUPABASE_DIR"
+          if ! supabase start -x realtime,storage-api,imgproxy,functions,studio,mailpit,analytics,vector,supavisor > "$RUNNER_TEMP/supabase-start.log" 2>&1; then
+            sed -E 's/(sb_(publishable|secret)_[A-Za-z0-9_-]+)/[REDACTED]/g' "$RUNNER_TEMP/supabase-start.log"
+            exit 1
+          fi
+
+      - name: Rebuild isolated database from CI bootstrap and exact remote migrations
+        run: |
+          cd "$CI_SUPABASE_DIR"
+          supabase db reset --local
+
+      - name: Run pgTAP role, purchase, cash, stock and idempotency suites
+        run: |
+          cd "$CI_SUPABASE_DIR"
+          supabase test db --local
+
+      - name: Export only ephemeral local Supabase keys to this job
+        shell: bash
+        run: |
+          cd "$CI_SUPABASE_DIR"
+          supabase status --env --output-format text > "$RUNNER_TEMP/supabase-local.env"
+          set -a
+          source "$RUNNER_TEMP/supabase-local.env"
+          set +a
+          {
+            echo "SUPABASE_URL=$API_URL"
+            echo "SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY:-$ANON_KEY}"
+            echo "AI_GATEWAY_API_KEY="
+            echo "VERCEL_OIDC_TOKEN="
+            echo "NEXT_TELEMETRY_DISABLED=1"
+          } >> "$GITHUB_ENV"
+
+      - name: Install Chromium for browser-based commercial E2E
+        run: npx playwright install --with-deps chromium
+
+      - name: Run POS, cash, purchases, expenses, role and assistant E2E
+        run: npm run test:e2e
+
+      - name: Stop and destroy the isolated Supabase stack
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${CI_SUPABASE_DIR:-}" && -d "$CI_SUPABASE_DIR/supabase" ]]; then
+            cd "$CI_SUPABASE_DIR"
+            supabase stop --no-backup || true
+          fi

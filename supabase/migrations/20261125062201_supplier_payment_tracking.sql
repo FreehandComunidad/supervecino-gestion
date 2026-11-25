@@ -21,6 +21,7 @@ using (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and
 with check (exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.active and p.role in ('owner','manager')));
 grant select,insert,update,delete on public.supplier_payments to authenticated;
 revoke all on public.supplier_payments from anon;
+
 create or replace function public.register_supplier_payment(
  p_purchase_id uuid,p_amount numeric,p_payment_date date,p_payment_method text,p_reference text default null,p_notes text default null
 ) returns uuid language plpgsql security invoker set search_path=public as $$

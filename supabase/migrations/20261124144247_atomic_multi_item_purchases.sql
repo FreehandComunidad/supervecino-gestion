@@ -1,4 +1,3 @@
--- Atomic multi-item supplier invoice creation. Inventory changes only when receive_purchase is called.
 create or replace function public.create_purchase_with_items(
  p_supplier_id uuid,
  p_invoice_number text,
@@ -24,8 +23,8 @@ begin
   raise exception 'La compra debe incluir al menos un producto.';
  end if;
  select count(*),
-        coalesce(sum(x.quantity*x.unit_cost_net),0),
-        coalesce(sum(x.quantity*x.unit_cost_net*x.vat_rate/100),0)
+        coalesce(sum((x.quantity::numeric)*(x.unit_cost_net::numeric)),0),
+        coalesce(sum((x.quantity::numeric)*(x.unit_cost_net::numeric)*(x.vat_rate::numeric)/100),0)
  into v_item_count,v_subtotal,v_tax_total
  from jsonb_to_recordset(p_items) as x(product_id uuid,quantity numeric,unit_cost_net numeric,vat_rate numeric);
  if v_item_count=0 or exists(

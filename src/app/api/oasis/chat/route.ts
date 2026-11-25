@@ -32,6 +32,9 @@ export async function POST(request: Request) {
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData.user) return Response.json({ error: 'Tu sesión venció. Volvé a iniciar sesión.' }, { status: 401 })
 
+    const { data: appProfile } = await supabase.from('profiles').select('role,active').eq('id', authData.user.id).maybeSingle()
+    const canSeeCosts = Boolean(appProfile?.active && ['owner', 'manager'].includes(appProfile.role))
+
     const body = (await request.json()) as ChatBody
     const agentId = String(body.agentId || '')
     const message = String(body.message || '').trim()
@@ -123,11 +126,10 @@ export async function POST(request: Request) {
       .eq('active', true)
 
     if ((businessCount || 0) === 1) {
-      const { data: products } = await supabase
-        .from('products')
-        .select('name,stock,min_stock,cost_price,sale_price,vat_rate')
-        .eq('active', true)
-        .limit(250)
+      const productsQuery = canSeeCosts
+        ? supabase.rpc('get_products_management').limit(250)
+        : supabase.from('products').select('name,stock,min_stock,sale_price').eq('active', true).limit(250)
+      const { data: products } = await productsQuery
       const since = new Date(Date.now() - 30 * 86400000).toISOString()
       const { data: sales } = await supabase
         .from('sales')
@@ -140,17 +142,18 @@ export async function POST(request: Request) {
       const completedSales = sales || []
       const revenue = completedSales.reduce((sum: number, sale: any) => sum + Number(sale.total || 0), 0)
       const lowStock = items.filter((p: any) => Number(p.min_stock || 0) > 0 && Number(p.stock || 0) <= Number(p.min_stock || 0))
-      const stockValue = items.reduce((sum: number, p: any) => sum + Number(p.stock || 0) * Number(p.cost_price || 0), 0)
-      businessContext = [
+      const stockValue = canSeeCosts ? items.reduce((sum: number, p: any) => sum + Number(p.stock || 0) * Number(p.cost_price || 0), 0) : null
+      const contextLines = [
         'Datos de solo lectura del único negocio activo conectado al POS:',
         'Período de ventas: últimos 30 días.',
         'Ventas completadas registradas: ' + completedSales.length,
         'Facturación registrada: $' + revenue.toFixed(2),
         'Productos activos consultados: ' + items.length,
         'Productos bajo o en stock mínimo: ' + lowStock.length,
-        'Valuación estimada del stock a costo neto: $' + stockValue.toFixed(2),
         'Alertas de stock: ' + lowStock.slice(0, 20).map((p: any) => p.name + ' (stock ' + p.stock + ', mínimo ' + p.min_stock + ')').join('; '),
-      ].join('\n')
+      ]
+      if (stockValue !== null) contextLines.push('Valuación estimada del stock a costo neto: $' + stockValue.toFixed(2))
+      businessContext = contextLines.join('\n')
     } else {
       businessContext = 'Hay más de un negocio activo, pero las tablas actuales del POS todavía no tienen una relación business_id. No atribuyas ventas ni stock a un negocio específico hasta completar esa vinculación.'
     }

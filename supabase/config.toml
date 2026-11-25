@@ -1,0 +1,4 @@
+project_id = "supervecino-gestion"
+
+[db]
+major_version = 17
