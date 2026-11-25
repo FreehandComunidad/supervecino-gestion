@@ -11,23 +11,24 @@ export default function PurchasingPanel(){
  const [suppliers,setSuppliers]=useState<Supplier[]>([])
  const [products,setProducts]=useState<Product[]>([])
  const [quotes,setQuotes]=useState<Quote[]>([])
- const [purchases,setPurchases]=useState<any[]>([])
+ const [purchases,setPurchases]=useState<any[]>([]);const [payments,setPayments]=useState<any[]>([])
  const [name,setName]=useState('');const [phone,setPhone]=useState('');const [tax,setTax]=useState('')
  const [supplier,setSupplier]=useState('');const [product,setProduct]=useState('');const [cost,setCost]=useState('');const [vat,setVat]=useState('21');const [lead,setLead]=useState('2');const [minimum,setMinimum]=useState('1')
  const [buySupplier,setBuySupplier]=useState('');const [buyProduct,setBuyProduct]=useState('');const [buyQty,setBuyQty]=useState('');const [buyCost,setBuyCost]=useState('');const [buyVat,setBuyVat]=useState('21')
  const [invoiceNumber,setInvoiceNumber]=useState('');const [purchaseDate,setPurchaseDate]=useState(new Date().toISOString().slice(0,10));const [dueDate,setDueDate]=useState('');const [purchaseNotes,setPurchaseNotes]=useState('')
  const [cart,setCart]=useState<Array<{product_id:string;name:string;quantity:number;unit_cost_net:number;vat_rate:number;unit:string}>>([])
- const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const [query,setQuery]=useState('')
+ const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const [query,setQuery]=useState('');const [payingId,setPayingId]=useState('');const [payAmount,setPayAmount]=useState('');const [payDate,setPayDate]=useState(new Date().toISOString().slice(0,10));const [payMethod,setPayMethod]=useState('transfer');const [payReference,setPayReference]=useState('')
  const load=useCallback(async()=>{
   setBusy(true)
-  const [a,b,c,d]=await Promise.all([
+  const [a,b,c,d,e]=await Promise.all([
    db.from('suppliers').select('id,name,phone,tax_id').eq('active',true).order('name'),
    db.from('products').select('id,name,brand,presentation,stock,unit').eq('active',true).order('name'),
    db.from('supplier_products').select('id,supplier_id,product_id,last_cost_net,vat_rate,lead_time_days,minimum_order_qty'),
-   db.from('purchases').select('id,invoice_number,purchase_date,due_date,status,total,supplier_id').order('created_at',{ascending:false}).limit(100)
+   db.from('purchases').select('id,invoice_number,purchase_date,due_date,status,total,supplier_id').order('created_at',{ascending:false}).limit(100),
+   db.from('supplier_payments').select('id,purchase_id,amount,payment_date,payment_method,reference').order('payment_date',{ascending:false})
   ])
-  setSuppliers(a.data||[]);setProducts(b.data||[]);setQuotes(c.data||[]);setPurchases(d.data||[])
-  if(a.error||b.error||c.error||d.error)setMessage((a.error||b.error||c.error||d.error)?.message||'Error cargando datos')
+  setSuppliers(a.data||[]);setProducts(b.data||[]);setQuotes(c.data||[]);setPurchases(d.data||[]);setPayments(e.data||[])
+  if(a.error||b.error||c.error||d.error||e.error)setMessage((a.error||b.error||c.error||d.error||e.error)?.message||'Error cargando datos')
   setBusy(false)
  },[db])
  useEffect(()=>{void load()},[load])
@@ -50,6 +51,16 @@ export default function PurchasingPanel(){
   setCart([]);setInvoiceNumber('');setDueDate('');setPurchaseNotes('');await load()
  }
  async function receive(id:string){const {error}=await db.rpc('receive_purchase',{p_purchase_id:id});setMessage(error?.message||'Compra recibida y stock actualizado.');await load()}
+ async function registerPayment(purchaseId:string,total:number){
+  const paid=payments.filter(x=>x.purchase_id===purchaseId).reduce((s,x)=>s+Number(x.amount),0)
+  const amount=Number(payAmount)
+  if(!Number.isFinite(amount)||amount<=0||amount>total-paid+0.005){setMessage('Ingresá un importe válido que no supere el saldo pendiente.');return}
+  setBusy(true)
+  const {error}=await db.rpc('register_supplier_payment',{p_purchase_id:purchaseId,p_amount:amount,p_payment_date:payDate,p_payment_method:payMethod,p_reference:payReference||null,p_notes:null})
+  setBusy(false)
+  if(error){setMessage(error.message);return}
+  setPayingId('');setPayAmount('');setPayReference('');setMessage('Pago registrado correctamente.');await load()
+ }
  const comparisons=quotes.filter(q=>products.find(p=>p.id===q.product_id)?.name.toLowerCase().includes(query.toLowerCase())).sort((a,b)=>a.last_cost_net*(1+a.vat_rate/100)-b.last_cost_net*(1+b.vat_rate/100))
  return <section className="management"><div className="management-head"><div><p className="eyebrow">ABASTECIMIENTO</p><h1>Proveedores y compras</h1><p className="muted">Compará costos finales, registrá compras y actualizá el inventario al recibir mercadería.</p></div><button className="secondary refresh" onClick={()=>void load()}><RefreshCw size={15}/> Actualizar</button></div>
  {message&&<p className="notice">{message}</p>}
@@ -64,6 +75,6 @@ export default function PurchasingPanel(){
  <div className="purchase-total"><span>{cart.length} artículos · Total factura</span><b>{money(cart.reduce((s,x)=>s+x.quantity*x.unit_cost_net*(1+x.vat_rate/100),0))}</b></div>
  <button className="primary compact" disabled={busy||!cart.length||!buySupplier}>{busy?'Guardando…':'Guardar factura como borrador'}</button>
  </form>
- <h2 className="subheading">Historial de compras</h2><div className="data-table"><div className="table-row purchase-table table-head"><span>Fecha</span><span>Proveedor</span><span>Vencimiento</span><span>Estado</span><span>Total</span><span>Acción</span></div>{purchases.map(p=><div className="table-row purchase-table" key={p.id}><span>{new Date(p.purchase_date+'T12:00:00').toLocaleDateString('es-AR')}</span><span>{suppliers.find(s=>s.id===p.supplier_id)?.name||'—'}</span><span>{p.due_date?new Date(p.due_date+'T12:00:00').toLocaleDateString('es-AR'):'—'}</span><span>{p.status}</span><b>{money(p.total)}</b>{p.status==='draft'?<button className="secondary compact" onClick={()=>void receive(p.id)}><ArrowDownToLine size={15}/> Recibir</button>:<span>—</span>}</div>)}</div>
+ <h2 className="subheading">Cuentas por pagar e historial de compras</h2><div className="data-table"><div className="table-row purchase-table table-head"><span>Fecha / factura</span><span>Proveedor</span><span>Vencimiento</span><span>Total</span><span>Saldo</span><span>Estado / acción</span></div>{purchases.map(p=>{const paid=payments.filter(x=>x.purchase_id===p.id).reduce((s,x)=>s+Number(x.amount),0);const balance=Math.max(0,Number(p.total)-paid);return <div className="purchase-record" key={p.id}><div className="table-row purchase-table"><span>{new Date(p.purchase_date+'T12:00:00').toLocaleDateString('es-AR')}<small>{p.invoice_number||'Sin número'}</small></span><span>{suppliers.find(s=>s.id===p.supplier_id)?.name||'—'}</span><span>{p.due_date?new Date(p.due_date+'T12:00:00').toLocaleDateString('es-AR'):'—'}</span><b>{money(p.total)}</b><b className={balance>0?'negative':'positive'}>{money(balance)}</b><span>{p.status==='draft'?<button className="secondary compact" onClick={()=>void receive(p.id)}><ArrowDownToLine size={15}/> Recibir</button>:balance>.005?<button className="secondary compact" onClick={()=>{setPayingId(payingId===p.id?'':p.id);setPayAmount(String(balance))}}>Registrar pago</button>:<b className="positive">Pagada</b>}</span></div>{payingId===p.id&&<form className="supplier-payment-form" onSubmit={e=>{e.preventDefault();void registerPayment(p.id,Number(p.total))}}><input type="number" min="0.01" max={balance} step=".01" value={payAmount} onChange={e=>setPayAmount(e.target.value)} placeholder="Importe a pagar" required/><input type="date" value={payDate} onChange={e=>setPayDate(e.target.value)} required/><select value={payMethod} onChange={e=>setPayMethod(e.target.value)}><option value="transfer">Transferencia</option><option value="cash">Efectivo</option><option value="debit">Débito</option><option value="credit">Crédito</option><option value="wallet">Billetera virtual</option><option value="other">Otro</option></select><input value={payReference} onChange={e=>setPayReference(e.target.value)} placeholder="Comprobante / referencia"/><button className="primary compact" disabled={busy}>Confirmar pago</button></form>}{payments.filter(x=>x.purchase_id===p.id).map(x=><div className="purchase-payments" key={x.id}>{new Date(x.payment_date+'T12:00:00').toLocaleDateString('es-AR')} · {money(x.amount)} · {x.payment_method} {x.reference||''}</div>)}</div>})}</div>
  </section>
 }
