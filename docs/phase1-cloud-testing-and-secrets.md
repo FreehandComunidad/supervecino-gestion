@@ -7,7 +7,7 @@ No se requiere instalar Docker Desktop, Supabase CLI, terminal ni programas en l
 ## Arquitectura de pruebas
 
 1. GitHub Actions descarga el repositorio y crea un workspace temporal bajo `$RUNNER_TEMP`.
-2. Copia los tres archivos de `supabase/ci/bootstrap/` y las migraciones históricas versionadas más las nuevas de FASE 1.
+2. Copia los tres archivos de baseline y el usuario owner sintético de `supabase/ci/bootstrap/` y las migraciones históricas versionadas más las nuevas de FASE 1.
 3. Inicia una instancia local/efímera de Supabase en el runner con PostgreSQL, Auth y REST. No inicia Storage, Realtime, Studio, Mail ni Analytics.
 4. Reconstruye la base desde cero y ejecuta pgTAP.
 5. Obtiene claves efímeras locales del propio CLI y las pasa al proceso de prueba. Las claves no son de producción ni se guardan como secretos del repositorio.
