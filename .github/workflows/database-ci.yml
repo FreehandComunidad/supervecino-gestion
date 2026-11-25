@@ -61,17 +61,11 @@ jobs:
       - name: Start isolated Supabase stack without exposing generated local keys
         shell: bash
         run: |
-          if ! supabase start > /tmp/supabase-start.log 2>&1; then
-            sed -E \
-              -e 's/(sb_(publishable|secret)_[A-Za-z0-9_-]+)/[REDACTED]/g' \
-              -e 's/(Secret Key|Access Key)[[:space:]]*\|.*/\1 | [REDACTED]/g' \
-              -e 's/(Database|URL)[[:space:]]*\|.*/\1 | [REDACTED]/g' \
-              /tmp/supabase-start.log
-            exit 1
-          fi
-          grep -E "Started supabase local development setup|Project URL|REST|Edge Functions" /tmp/supabase-start.log \
-            | sed -E 's#http://127\.0\.0\.1:[0-9]+#LOCAL_ENDPOINT#g'
-
+          set -o pipefail
+          supabase start 2>&1 | sed -u -E \
+            -e 's/(sb_(publishable|secret)_[A-Za-z0-9_-]+)/[REDACTED]/g' \
+            -e 's/(Secret Key|Access Key)[[:space:]]*\|.*/\1 | [REDACTED]/g' \
+            -e 's/(Database|URL)[[:space:]]*\|.*/\1 | [REDACTED]/g'
       - name: Rebuild local database from tracked migrations
         run: supabase db reset --local
 
