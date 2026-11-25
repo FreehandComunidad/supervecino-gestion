@@ -1,4 +1,1 @@
 project_id = "supervecino-gestion"
-
-[functions.cryptic-score]
-verify_jwt = false
