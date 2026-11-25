@@ -1,12 +1,6 @@
 name: Database CI (isolated cloud)
 
 on:
-  push:
-    branches:
-      - security/phase-1-hardening
-    paths:
-      - "supabase/**"
-      - ".github/workflows/database-ci.yml"
   pull_request:
     branches:
       - main
