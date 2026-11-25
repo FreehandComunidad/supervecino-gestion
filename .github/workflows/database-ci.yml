@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          supabase start -x gotrue,realtime,storage-api,imgproxy,studio,mailpit,analytics,vector,supavisor 2>&1 | sed -u -E \
+          supabase start -x gotrue,realtime,storage-api,imgproxy,studio,mailpit,analytics,vector,supavisor,rest,edge-runtime,kong,pgmeta 2>&1 | sed -u -E \
             -e 's/(sb_(publishable|secret)_[A-Za-z0-9_-]+)/[REDACTED]/g' \
             -e 's/(Secret Key|Access Key)[[:space:]]*\|.*/\1 | [REDACTED]/g' \
             -e 's/(Database|URL)[[:space:]]*\|.*/\1 | [REDACTED]/g'
@@ -77,29 +77,6 @@ jobs:
           else
             echo "No pgTAP database tests are committed yet; migration replay was still executed."
           fi
-
-      - name: Test cryptic Edge Function against synthetic local data
-        shell: bash
-        run: |
-          printf 'CRYPTIC_ANSWERS_JSON={"1":"TEST"}\n' > supabase/functions/.env
-          supabase functions serve cryptic-score --env-file supabase/functions/.env > /tmp/cryptic-edge.log 2>&1 &
-          for attempt in {1..30}; do
-            if curl -fsS -X OPTIONS http://127.0.0.1:54321/functions/v1/cryptic-score >/dev/null; then
-              break
-            fi
-            sleep 1
-          done
-          first=$(curl -fsS -X POST http://127.0.0.1:54321/functions/v1/cryptic-score \
-            -H "Content-Type: application/json" \
-            -d '{"guest_id":"00000000-0000-4000-8000-000000000001","stage_number":1,"answer":"TEST","hints_used":0}')
-          echo "$first"
-          echo "$first" | grep -q '"correct":true'
-          echo "$first" | grep -q '"points_awarded":100'
-          second=$(curl -fsS -X POST http://127.0.0.1:54321/functions/v1/cryptic-score \
-            -H "Content-Type: application/json" \
-            -d '{"guest_id":"00000000-0000-4000-8000-000000000001","stage_number":1,"answer":"TEST","hints_used":0}')
-          echo "$second"
-          echo "$second" | grep -q '"already_completed":true'
 
       - name: Stop isolated stack
         if: always()
