@@ -1,6 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { clearPendingSaleKey, getPendingSaleKey } from '@/lib/pos-idempotency.mjs'
 import { createClient } from '@/lib/supabase/client'
 import { calculateSubtotal, calculateDiscount, calculateTotal } from '@/lib/pos-calculations'
 import { Search, ShoppingCart, Trash2, LogOut, Store, CreditCard, Banknote, Smartphone, X, Plus, Package } from 'lucide-react'
@@ -34,6 +35,11 @@ export default function Home() {
   const [cashAmount, setCashAmount] = useState('0')
   const [closeAmount, setCloseAmount] = useState('0')
   const [cashBusy, setCashBusy] = useState(false)
+  const [cashMovementType, setCashMovementType] = useState<'in' | 'out'>('in')
+  const [cashMovementAmount, setCashMovementAmount] = useState('')
+  const [cashMovementDescription, setCashMovementDescription] = useState('')
+  const [cashMovementBusy, setCashMovementBusy] = useState(false)
+  const pendingSaleRef = useRef<{ fingerprint: string; key: string } | null>(null)
   const [profileRole, setProfileRole] = useState<string | null>(null)
   const [section, setSection] = useState<'pos'|'sales'|'cash'|'pricing'|'stats'|'inventory'|'purchases'|'expenses'|'finance'|'assistant'|'oasis'>('pos')
   const [showProductForm, setShowProductForm] = useState(false)
@@ -146,6 +152,19 @@ export default function Home() {
     setCashBusy(false)
     if (error) setMessage(error.message); else { setMessage('Caja cerrada. Esperado: ' + money(Number(data.expected_amount)) + ' · Diferencia: ' + money(Number(data.difference))); await checkCash() }
   }
+  async function registerCashMovement(e: React.FormEvent) {
+    e.preventDefault()
+    const amount = Number(cashMovementAmount)
+    const description = cashMovementDescription.trim()
+    if (!Number.isFinite(amount) || amount <= 0 || !description) { setMessage('Ingresá un importe positivo y una descripción para el movimiento.'); return }
+    setCashMovementBusy(true); setMessage('')
+    const { error } = await supabase.rpc('register_cash_movement', { p_movement_type: cashMovementType, p_amount: amount, p_description: description })
+    setCashMovementBusy(false)
+    if (error) { setMessage(error.message); return }
+    setCashMovementAmount(''); setCashMovementDescription('')
+    setMessage(cashMovementType === 'in' ? 'Ingreso de caja registrado.' : 'Egreso de caja registrado.')
+    await checkCash()
+  }
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setMessage('')
     const normalizedUsername = username.trim().toLowerCase()
@@ -175,21 +194,10 @@ export default function Home() {
       p_notes: null,
     })
 
-    let idempotencyKey: string
-    try {
-      const pending = JSON.parse(localStorage.getItem('supervecino_pending_sale') || 'null')
-      if (pending?.fingerprint === requestFingerprint && typeof pending.key === 'string') {
-        idempotencyKey = pending.key
-      } else {
-        idempotencyKey = crypto.randomUUID()
-        localStorage.setItem('supervecino_pending_sale', JSON.stringify({
-          fingerprint: requestFingerprint,
-          key: idempotencyKey,
-        }))
-      }
-    } catch {
-      idempotencyKey = crypto.randomUUID()
-    }
+    let storage: Storage | null = null
+    try { storage = window.localStorage } catch {}
+    const idempotencyKey = getPendingSaleKey(storage, requestFingerprint, () => crypto.randomUUID(), pendingSaleRef.current)
+    pendingSaleRef.current = { fingerprint: requestFingerprint, key: idempotencyKey }
 
     const { data, error } = await supabase.rpc('create_pos_sale', {
       p_items,
@@ -203,7 +211,8 @@ export default function Home() {
     setBusy(false)
     if (error) { setMessage(error.message); return }
 
-    try { localStorage.removeItem('supervecino_pending_sale') } catch {}
+    pendingSaleRef.current = null
+    try { clearPendingSaleKey(window.localStorage) } catch {}
     setMessage((data?.duplicate ? 'Venta ya registrada. N.º ' : 'Venta registrada correctamente. N.º ') + (data?.sale_number ?? data?.id ?? ''))
     setCart([]); setDiscount('0'); await loadProducts(); await checkCash()
   }
@@ -211,7 +220,12 @@ export default function Home() {
   return <main className="app-shell">
     <header className="topbar"><div className="brand"><div className="brand-mark"><Store size={22}/></div><div><strong>SÚPERVECINO</strong><small>GESTIÓN COMERCIAL</small></div></div><div className="top-actions"><span className="user-label">{user === 'administrador@supervecino.local' ? 'administrador' : user}</span><button className="icon-button" onClick={async()=>{await supabase.auth.signOut();setCart([])}} title="Cerrar sesión"><LogOut size={18}/></button></div></header>
     <nav className="main-nav">{visibleNavigation.map(item=><button key={item.id} className={section===item.id?"active":""} onClick={()=>setSection(item.id)}>{item.label}</button>)}</nav>
-    {section === "oasis" ? <OasisHQ /> : section === "assistant" ? <CentralAssistant /> : section === "expenses" ? <ExpensesPanel /> : section === "finance" ? <FinancialDashboard /> : section === "purchases" ? <PurchasingPanel /> : section === "pos" ? <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><div className="cash-controls">{cashOpen === null ? <span className="status">Verificando caja…</span> : cashOpen ? <><span className="status open">Caja abierta</span><input aria-label="Efectivo contado al cierre" type="number" min="0" value={closeAmount} onChange={e=>setCloseAmount(e.target.value)} placeholder="Efectivo contado"/><button className="secondary" disabled={cashBusy} onClick={closeCash}>Cerrar caja</button></> : <><span className="status closed">Caja cerrada</span><input aria-label="Monto inicial de caja" type="number" min="0" value={cashAmount} onChange={e=>setCashAmount(e.target.value)} placeholder="Fondo inicial"/><button className="primary compact" disabled={cashBusy} onClick={openCash}>Abrir caja</button></>}</div></div>
+    {section === "oasis" ? <OasisHQ /> : section === "assistant" ? <CentralAssistant /> : section === "expenses" ? <ExpensesPanel /> : section === "finance" ? <FinancialDashboard /> : section === "purchases" ? <PurchasingPanel /> : section === "pos" ? <div className="workspace"><section className="catalog"><div className="section-heading"><div><p className="eyebrow">OPERACIONES</p><h1>Punto de venta</h1></div><div className="cash-controls">{cashOpen === null ? <span className="status">Verificando caja…</span> : cashOpen ? <><span className="status open">Caja abierta</span><input aria-label="Efectivo contado al cierre" type="number" min="0" value={closeAmount} onChange={e=>setCloseAmount(e.target.value)} placeholder="Efectivo contado"/><button className="secondary" disabled={cashBusy} onClick={closeCash}>Cerrar caja</button></> : <><span className="status closed">Caja cerrada</span><input aria-label="Monto inicial de caja" type="number" min="0" value={cashAmount} onChange={e=>setCashAmount(e.target.value)} placeholder="Fondo inicial"/><button className="primary compact" disabled={cashBusy} onClick={openCash}>Abrir caja</button></>}</div></div>{cashOpen && <form className="cash-movement-form" onSubmit={registerCashMovement}>
+        <label>Movimiento<select aria-label="Tipo de movimiento de caja" value={cashMovementType} onChange={e=>setCashMovementType(e.target.value as 'in'|'out')}><option value="in">Ingreso</option><option value="out">Egreso</option></select></label>
+        <label>Importe<input aria-label="Importe del movimiento" type="number" min="0.01" step="0.01" value={cashMovementAmount} onChange={e=>setCashMovementAmount(e.target.value)} placeholder="0,00" required/></label>
+        <label>Descripción<input aria-label="Descripción del movimiento" maxLength={160} value={cashMovementDescription} onChange={e=>setCashMovementDescription(e.target.value)} placeholder="Ej. cambio, gasto de caja…" required/></label>
+        <button className="secondary" type="submit" disabled={cashMovementBusy}>{cashMovementBusy?'Registrando…':'Registrar movimiento'}</button>
+      </form>
       <div className="catalog-toolbar"><div className="searchbox"><Search size={19}/><input autoFocus placeholder="Buscar por nombre, código o barras…" value={search} onChange={e=>setSearch(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){const match=products.find(p=>p.barcode===search.trim()||p.sku===search.trim());if(match){add(match);setSearch('')}}}}/>{search && <button className="icon-button" onClick={()=>setSearch('')}><X size={17}/></button>}</div>{(profileRole === 'owner' || profileRole === 'manager') && <button className="secondary add-product" onClick={()=>setShowProductForm(v=>!v)}><Plus size={16}/> Nuevo producto</button>}</div>
       {showProductForm && <form className="product-form" onSubmit={saveProduct}><div className="form-heading"><Package size={18}/><strong>Alta de producto</strong></div><div className="form-grid"><label>Nombre del producto<input required value={newName} onChange={e=>setNewName(e.target.value)} /></label><label>Marca<input value={newBrand} placeholder="Ej. ENERCAT, PROVET" onChange={e=>setNewBrand(e.target.value)} /></label><label>Presentación / tamaño<input value={newPresentation} placeholder="Ej. 3 kg, 7,5 kg, 20 kg" onChange={e=>setNewPresentation(e.target.value)} /></label><label>Código de barras (lector USB/Bluetooth)<input value={newBarcode} inputMode="numeric" placeholder="Escaneá o escribí el código" onChange={e=>setNewBarcode(e.target.value)} /></label><label>Precio de venta con IVA<input required type="number" min="0.01" step="0.01" value={newSalePrice} onChange={e=>setNewSalePrice(e.target.value)} /></label><label>Costo sin IVA<input type="number" min="0" step="0.01" value={newCostPrice} onChange={e=>setNewCostPrice(e.target.value)} /></label><label>IVA (%)<input type="number" min="0" max="100" step="0.01" value={newVatRate} onChange={e=>setNewVatRate(e.target.value)} /></label><label>Stock inicial<input type="number" min="0" step="0.001" value={newStock} onChange={e=>setNewStock(e.target.value)} /></label><label>Stock mínimo / alerta<input type="number" min="0" step="0.001" value={newMinStock} onChange={e=>setNewMinStock(e.target.value)} /></label><label>Unidad<input value={newUnit} onChange={e=>setNewUnit(e.target.value)} /></label><label>Rubro<select value={newCategoryId} onChange={e=>{setNewCategoryId(e.target.value);setNewSubcategoryId('')}}><option value="">Sin rubro</option>{categories.filter(c=>!c.parent_id).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Subrubro<select value={newSubcategoryId} onChange={e=>setNewSubcategoryId(e.target.value)} disabled={!newCategoryId}><option value="">Sin subrubro</option>{categories.filter(c=>c.parent_id===newCategoryId).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label></div><div className="category-quick"><div><input placeholder="Nuevo rubro" value={categoryName} onChange={e=>setCategoryName(e.target.value)}/><button type="button" className="secondary" onClick={()=>void addCategory(false)}>Crear rubro</button></div><div><input placeholder="Nuevo subrubro" value={subcategoryName} onChange={e=>setSubcategoryName(e.target.value)} disabled={!newCategoryId}/><button type="button" className="secondary" disabled={!newCategoryId} onClick={()=>void addCategory(true)}>Crear subrubro</button></div></div><div className="form-actions"><button type="button" className="secondary" onClick={()=>setShowProductForm(false)}>Cancelar</button><button className="primary compact" disabled={busy}>Guardar producto</button></div></form>}
       <div className="product-grid">{filtered.map(p=><button className="product-card" key={p.id} onClick={()=>add(p)}><span className="product-name">{p.name}</span><strong>{money(Number(p.sale_price))}</strong><small>{[p.brand,p.presentation].filter(Boolean).join(' · ')}{p.brand||p.presentation?' · ':''}{p.barcode || p.sku || 'Sin código'} · Stock: {p.stock}</small></button>)}</div>
