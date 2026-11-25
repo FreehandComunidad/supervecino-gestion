@@ -87,7 +87,7 @@ select lives_ok(
  'manager can receive the purchase once'
 );
 select is((select stock from public.products where id='00000000-0000-4000-8000-000000000111'),7::numeric,'receiving purchase updates stock exactly once');
-select is((select cost_price from public.products where id='00000000-0000-4000-8000-000000000111'),50::numeric,'receiving purchase updates the product net cost');
+select is((select cost_price from public.get_products_management() where id='00000000-0000-4000-8000-000000000111'),50::numeric,'receiving purchase updates the product net cost through manager RPC');
 select is((select count(*)::integer from public.supplier_products where supplier_id='00000000-0000-4000-8000-000000000111' and product_id='00000000-0000-4000-8000-000000000111'),1,'receiving purchase updates supplier-product terms');
 select lives_ok(
  'select public.register_supplier_payment((select id from public.purchases where invoice_number=''CI-MANAGER-001''),50,current_date,''transfer'',null,''CI partial payment'')',
