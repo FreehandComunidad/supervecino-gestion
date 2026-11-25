@@ -60,13 +60,8 @@ select is(
 );
 
 select lives_ok(
-  $$do $test$ begin
-    perform public.record_cryptic_attempt('00000000-0000-4000-8000-000000000002', 2, false, 0);
-    perform public.record_cryptic_attempt('00000000-0000-4000-8000-000000000002', 2, false, 0);
-    perform public.record_cryptic_attempt('00000000-0000-4000-8000-000000000002', 2, false, 0);
-    perform public.record_cryptic_attempt('00000000-0000-4000-8000-000000000002', 2, false, 0);
-    perform public.record_cryptic_attempt('00000000-0000-4000-8000-000000000002', 2, false, 0);
-  end $test$$,
+  $select public.record_cryptic_attempt('00000000-0000-4000-8000-000000000002', 2, false, 0)
+    from generate_series(1, 5)$,
   'five incorrect attempts can be recorded'
 );
 select is(
