@@ -1,6 +1,6 @@
 begin;
 
-select plan(32);
+select plan(35);
 
 insert into auth.users (id,aud,role,email,encrypted_password,email_confirmed_at,created_at,updated_at)
 values
@@ -27,6 +27,9 @@ values ('00000000-0000-4000-8000-000000000111','CI Purchase Product',100,40,5,1,
 on conflict(id) do nothing;
 insert into public.product_price_history(id,product_id,old_cost_price,new_cost_price,old_sale_price,new_sale_price,changed_by)
 values ('00000000-0000-4000-8000-000000000115','00000000-0000-4000-8000-000000000111',35,40,90,100,'00000000-0000-4000-8000-000000000112')
+on conflict(id) do nothing;
+insert into public.stock_movements(id,product_id,movement_type,quantity_delta,notes,created_by)
+values ('00000000-0000-4000-8000-000000000116','00000000-0000-4000-8000-000000000111','adjustment',1,'CI synthetic history','00000000-0000-4000-8000-000000000112')
 on conflict(id) do nothing;
 
 insert into public.purchases(id,supplier_id,invoice_number,purchase_date,status,subtotal,tax_total,total,created_by)
@@ -60,6 +63,7 @@ select is((select count(*)::integer from public.supplier_payments),0,'cashier ca
 select is((select count(*)::integer from public.suppliers),0,'cashier cannot read supplier identities');
 select is((select count(*)::integer from public.supplier_products),0,'cashier cannot read supplier costs and lead times');
 select is((select count(*)::integer from public.product_price_history where id='00000000-0000-4000-8000-000000000115'),0,'cashier cannot read historical product prices');
+select is((select count(*)::integer from public.stock_movements where id='00000000-0000-4000-8000-000000000116'),0,'cashier cannot read stock movement history');
 select is((select count(*)::integer from public.operating_expenses),0,'cashier cannot read operating expenses');
 reset role;
 
@@ -105,6 +109,7 @@ select is(
 select is((select count(*)::integer from public.purchases),2,'manager can read all purchase headers');
 select is((select count(*)::integer from public.operating_expenses),1,'manager can read operating expenses');
 select is((select count(*)::integer from public.product_price_history where id='00000000-0000-4000-8000-000000000115'),1,'manager can audit historical product prices');
+select is((select count(*)::integer from public.stock_movements where id='00000000-0000-4000-8000-000000000116'),1,'manager can audit stock movement history');
 reset role;
 
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000111',true);
@@ -112,6 +117,7 @@ set local role authenticated;
 select is((select count(*)::integer from public.purchases),2,'owner can read all purchase headers');
 select is((select count(*)::integer from public.supplier_payments),2,'owner can audit supplier payments');
 select is((select count(*)::integer from public.product_price_history where id='00000000-0000-4000-8000-000000000115'),1,'owner can audit historical product prices');
+select is((select count(*)::integer from public.stock_movements where id='00000000-0000-4000-8000-000000000116'),1,'owner can audit stock movement history');
 select lives_ok('select count(*) from public.get_products_management()','owner can access the protected cost and margin RPC');
 reset role;
 
