@@ -157,6 +157,7 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     expect([first.data?.duplicate, retry.data?.duplicate].filter(Boolean)).toHaveLength(1)
     const idempotentSales = await service.from('sales').select('id').eq('idempotency_key', idempotencyKey)
     expect(idempotentSales.data).toHaveLength(1)
+    expect((await service.from('sales').select('id').eq('cashier_id', managerId).eq('idempotency_key', idempotencyKey)).data).toHaveLength(1)
     const splitPayments = await service.from('payments').select('method,amount').eq('sale_id', idempotentSales.data![0].id)
     expect(splitPayments.data).toHaveLength(2)
     expect(new Set(splitPayments.data!.map(p => p.method))).toEqual(new Set(['cash', 'transfer']))
