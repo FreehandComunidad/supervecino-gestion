@@ -96,6 +96,9 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     const movements = await service.from('cash_movements').select('movement_type,amount').eq('session_id', session.data!.id)
     expect(movements.data).toHaveLength(3)
     expect(new Set(movements.data!.map(m => m.movement_type))).toEqual(new Set(['in', 'out', 'sale']))
+    expect((await cashierClient.from('cash_sessions').select('id')).data).toHaveLength(1)
+    expect((await cashierClient.from('cash_movements').select('id')).data).toHaveLength(3)
+    expect((await cashierClient.from('sales').select('id')).data).toHaveLength(2)
   })
 
   test('compras, pagos, stock, reportes, permisos directos, idempotencia y asistente', async ({ request }) => {
@@ -136,6 +139,10 @@ test.describe('SÚPERVECINO — flujos comerciales aislados', () => {
     const managerProducts = await managerClient.rpc('get_products_management')
     const ownerProducts = await ownerClient.rpc('get_products_management')
     expect(managerProducts.error).toBeNull(); expect(ownerProducts.error).toBeNull()
+    const stockProductContext = managerProducts.data!.find(p => p.id === stockProductId)
+    expect(Number(stockProductContext.sale_price) - Number(stockProductContext.cost_price)).toBe(50)
+    expect((await managerClient.from('cash_sessions').select('id')).data).toHaveLength(1)
+    expect((await managerClient.from('cash_movements').select('id')).data).toHaveLength(3)
     expect((await managerClient.from('purchases').select('id').eq('id', purchaseId)).data).toHaveLength(1)
     expect((await managerClient.from('supplier_payments').select('id').eq('purchase_id', purchaseId)).data).toHaveLength(2)
     expect((await managerClient.from('operating_expenses').select('id')).data).toHaveLength(1)
