@@ -25,6 +25,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Deno for Supabase Edge Function checks
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check cryptic Edge Function
+        run: deno check supabase/functions/cryptic-score/index.ts
+
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@v1
         with:
