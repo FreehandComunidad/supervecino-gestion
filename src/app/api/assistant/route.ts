@@ -5,6 +5,18 @@ export const runtime = 'nodejs'
 export const maxDuration = 30
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
+type ProductContext = {
+  name: string
+  brand: string | null
+  presentation: string | null
+  sale_price: number
+  cost_price: number
+  vat_rate: number
+  stock: number
+  min_stock: number
+  manages_stock: boolean
+  active: boolean
+}
 
 const systemPrompt = `Sos el asistente central de SÚPERVECINO GESTIÓN, un comercio minorista de San Juan, Argentina.
 Respondé en español rioplatense, claro, práctico y con importes en pesos argentinos.
@@ -52,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No pude leer todos los datos. Revisá los permisos o intentá nuevamente.' }, { status: 500 })
     }
 
-    const products = productsResult.data || []
+    const products = (productsResult.data || []) as ProductContext[]
     const sales = (salesResult.data || []).filter(s => s.status !== 'cancelled')
     const cash = cashResult.data || []
     const purchases = purchasesResult.data || []
