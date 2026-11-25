@@ -57,7 +57,7 @@ select is(
   'cashier cannot read internal app settings'
 );
 select throws_ok(
-  $'select count(*) from public.get_products_management()'$,
+  'select count(*) from public.get_products_management()',
   'P0001',
   'No tenés permisos para consultar costos y rentabilidad.',
   'cashier cannot access internal product cost RPC'
@@ -77,7 +77,7 @@ select is(
   'manager can see all staff profiles'
 );
 select lives_ok(
-  $select count(*) from public.get_products_management()$,
+  'select count(*) from public.get_products_management()',
   'manager can access the protected product management RPC'
 );
 select is(
