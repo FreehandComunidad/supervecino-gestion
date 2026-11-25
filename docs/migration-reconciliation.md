@@ -42,6 +42,8 @@ El esquema productivo sí contiene las estructuras comerciales relacionadas —i
 - `supabase/ci/bootstrap/00000000000002_pos_security_cash.sql`
 - `supabase/ci/bootstrap/00000000000003_supplier_purchasing.sql`
 
+Además, `00000000000004_ci_oasis_owner_seed.sql` crea un perfil owner sintético requerido por la migración OASIS durante el replay local. No representa un usuario productivo.
+
 Son una base de reconstrucción para pruebas aisladas. **No forman parte de las 13 migraciones productivas ni deben aplicarse a producción.** El archivo de compras/proveedores es una reconstrucción desde el repositorio y debe seguir identificado como tal hasta que se pueda contrastar con el SQL original.
 
 ## Migraciones nuevas de FASE 1
@@ -59,7 +61,7 @@ Estas son propuestas nuevas, no migraciones ya aplicadas en producción.
 
 El workflow crea un directorio temporal fuera del árbol de producción y copia, en este orden:
 
-1. Los tres archivos `supabase/ci/bootstrap/`, con versiones sintéticas locales.
+1. Los cuatro archivos `supabase/ci/bootstrap/`, con versiones sintéticas locales.
 2. Las 13 migraciones históricas exactas y versionadas.
 3. Las cuatro migraciones nuevas de FASE 1.
 4. Las suites pgTAP.
